@@ -36,10 +36,33 @@ __decorate([
 UsernamePasswordInput = __decorate([
     (0, type_graphql_1.InputType)()
 ], UsernamePasswordInput);
+let FieldError = class FieldError {
+};
+__decorate([
+    (0, type_graphql_1.Field)(() => String)
+], FieldError.prototype, "field", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => String)
+], FieldError.prototype, "message", void 0);
+FieldError = __decorate([
+    (0, type_graphql_1.ObjectType)()
+], FieldError);
+let UserResponse = class UserResponse {
+};
+__decorate([
+    (0, type_graphql_1.Field)(() => [FieldError], { nullable: true })
+], UserResponse.prototype, "errors", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => User_1.User, { nullable: true })
+], UserResponse.prototype, "user", void 0);
+UserResponse = __decorate([
+    (0, type_graphql_1.ObjectType)()
+], UserResponse);
 let UserResolver = class UserResolver {
     getAllUsers({ em }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return em.find(User_1.User, {});
+            const users = yield em.find(User_1.User, {});
+            return users;
         });
     }
     register(options, { em }) {
@@ -50,7 +73,40 @@ let UserResolver = class UserResolver {
                 password: hashedPassword,
             });
             yield em.persistAndFlush(user);
-            return user;
+            return {
+                user,
+            };
+        });
+    }
+    login(options, { em }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield em.findOne(User_1.User, {
+                username: options.username,
+            });
+            if (!user) {
+                return {
+                    errors: [
+                        {
+                            field: "username",
+                            message: "username doesn't exist",
+                        },
+                    ],
+                };
+            }
+            const isMatch = yield argon2_1.default.verify(user.password, options.password);
+            if (!isMatch) {
+                return {
+                    errors: [
+                        {
+                            field: "password",
+                            message: "passwords don't match",
+                        },
+                    ],
+                };
+            }
+            return {
+                user,
+            };
         });
     }
 };
@@ -59,10 +115,15 @@ __decorate([
     __param(0, (0, type_graphql_1.Ctx)())
 ], UserResolver.prototype, "getAllUsers", null);
 __decorate([
-    (0, type_graphql_1.Mutation)(() => User_1.User),
+    (0, type_graphql_1.Mutation)(() => UserResponse),
     __param(0, (0, type_graphql_1.Arg)("options", () => UsernamePasswordInput)),
     __param(1, (0, type_graphql_1.Ctx)())
 ], UserResolver.prototype, "register", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => UserResponse),
+    __param(0, (0, type_graphql_1.Arg)("options", () => UsernamePasswordInput)),
+    __param(1, (0, type_graphql_1.Ctx)())
+], UserResolver.prototype, "login", null);
 UserResolver = __decorate([
     (0, type_graphql_1.Resolver)()
 ], UserResolver);
