@@ -19,12 +19,13 @@ const Post_1 = require("./entities/Post");
 const apollo_server_express_1 = require("apollo-server-express");
 const type_graphql_1 = require("type-graphql");
 const hello_1 = require("./resolvers/hello");
+const post_1 = require("./resolvers/post");
+const user_1 = require("./resolvers/user");
 const constants_1 = require("./constants");
 const morgan_1 = __importDefault(require("morgan"));
 require("reflect-metadata");
 require("dotenv/config");
 require("colors");
-const post_1 = require("./resolvers/post");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const orm = yield core_1.MikroORM.init(mikro_orm_config_1.default);
     yield orm.getMigrator().up();
@@ -34,7 +35,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const app = (0, express_1.default)();
     const apolloServer = new apollo_server_express_1.ApolloServer({
         schema: yield (0, type_graphql_1.buildSchema)({
-            resolvers: [hello_1.HelloResolver, post_1.PostResolver],
+            resolvers: [hello_1.HelloResolver, post_1.PostResolver, user_1.UserResolver],
             validate: false,
         }),
         context: () => ({ em: fork }),
@@ -43,6 +44,9 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     apolloServer.applyMiddleware({ app });
     if (!constants_1.__prod__)
         app.use((0, morgan_1.default)("dev"));
+    app.get("/", (_, res) => {
+        res.send("hello");
+    });
     const port = process.env.PORT || 5000;
     app.listen(port, () => {
         if (!constants_1.__prod__)

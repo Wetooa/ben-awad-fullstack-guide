@@ -1,5 +1,5 @@
 import { Post } from "../entities/Post";
-import { MyContext } from "src/types";
+import { MyContext } from "../types";
 import { Resolver, Query, Ctx, Arg, Int, Mutation } from "type-graphql";
 
 // ok so resolver is where we make our commands, kinda like the controllers

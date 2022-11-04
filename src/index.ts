@@ -4,7 +4,10 @@ import { MikroORM } from "@mikro-orm/core";
 import { Post } from "./entities/Post";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
+
 import { HelloResolver } from "./resolvers/hello";
+import { PostResolver } from "./resolvers/post";
+import { UserResolver } from "./resolvers/user";
 
 import { __prod__ } from "./constants";
 import morgan from "morgan";
@@ -12,7 +15,6 @@ import morgan from "morgan";
 import "reflect-metadata";
 import "dotenv/config";
 import "colors";
-import { PostResolver } from "./resolvers/post";
 
 const main = async () => {
   const orm = await MikroORM.init(mikroOrmConfig);
@@ -29,7 +31,7 @@ const main = async () => {
   const app: Application = express();
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver, PostResolver],
+      resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
     context: () => ({ em: fork }),
@@ -40,9 +42,9 @@ const main = async () => {
 
   if (!__prod__) app.use(morgan("dev"));
 
-  // app.get("/", (_, res) => {
-  //   res.send("hello");
-  // });
+  app.get("/", (_, res) => {
+    res.send("hello");
+  });
 
   const port = process.env.PORT || 5000;
   app.listen(port, () => {
