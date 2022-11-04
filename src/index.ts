@@ -25,8 +25,8 @@ const main = async () => {
   // await fork.persistAndFlush(post);
   // await orm.em.nativeInsert(Post, { title: "my first post" });
 
-  const posts = await fork.find(Post, {});
-  console.log(posts);
+  // const posts = await fork.find(Post, {});
+  // console.log(posts);
 
   const app: Application = express();
   const apolloServer = new ApolloServer({

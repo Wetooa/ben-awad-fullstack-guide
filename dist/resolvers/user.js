@@ -67,12 +67,46 @@ let UserResolver = class UserResolver {
     }
     register(options, { em }) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (options.username.length <= 2) {
+                return {
+                    errors: [
+                        {
+                            field: "username",
+                            message: "length must be greater 2",
+                        },
+                    ],
+                };
+            }
+            if (options.password.length <= 2) {
+                return {
+                    errors: [
+                        {
+                            field: "password",
+                            message: "length must be greater 2",
+                        },
+                    ],
+                };
+            }
             const hashedPassword = yield argon2_1.default.hash(options.password);
             const user = em.create(User_1.User, {
                 username: options.username,
                 password: hashedPassword,
             });
-            yield em.persistAndFlush(user);
+            try {
+                yield em.persistAndFlush(user);
+            }
+            catch (error) {
+                if (error.code === "23505") {
+                    return {
+                        errors: [
+                            {
+                                field: "username",
+                                message: "username already taken",
+                            },
+                        ],
+                    };
+                }
+            }
             return {
                 user,
             };
