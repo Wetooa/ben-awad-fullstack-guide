@@ -1,13 +1,18 @@
+// import { Post } from "./entities/Post";
+
 import mikroOrmConfig from "./mikro-orm.config";
 import express, { Application } from "express";
 import { MikroORM } from "@mikro-orm/core";
-import { Post } from "./entities/Post";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
+
+import * as redis from "redis";
+import session from "express-session";
+import connectRedis from "connect-redis";
 
 import { __prod__ } from "./constants";
 import morgan from "morgan";
@@ -29,16 +34,52 @@ const main = async () => {
   // console.log(posts);
 
   const app: Application = express();
+
+  let RedisStore = connectRedis(session);
+  let redisClient: any = redis.createClient({ legacyMode: true });
+  redisClient
+    .connect()
+    .then(() => console.log("[redis]: redis client connected".red.underline))
+    .catch((_: Error) => {
+      console.log("[redis]: redis client failed to conenct".bgRed.underline);
+    });
+
+  app.set("trust proxy", !__prod__);
+
+  app.use(
+    session({
+      name: "qid",
+      store: new RedisStore({
+        client: redisClient,
+        disableTouch: true,
+      }),
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
+        httpOnly: true,
+        secure: true, // cookie only works in https
+        sameSite: __prod__ ? "lax" : "none", // csrf
+      },
+      secret: "envlater",
+      resave: false,
+      saveUninitialized: false,
+    })
+  );
+
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: () => ({ em: fork }),
+    context: ({ req, res }) => ({ em: fork, req, res }),
   });
-
   await apolloServer.start();
-  apolloServer.applyMiddleware({ app });
+  apolloServer.applyMiddleware({
+    app,
+    cors: {
+      origin: ["https://localhost:3000", "https://studio.apollographql.com"],
+      credentials: true,
+    },
+  });
 
   if (!__prod__) app.use(morgan("dev"));
 

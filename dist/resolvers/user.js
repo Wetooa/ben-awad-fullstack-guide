@@ -59,13 +59,22 @@ UserResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], UserResponse);
 let UserResolver = class UserResolver {
+    me({ em, req }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!req.session.userId) {
+                return null;
+            }
+            const user = yield em.findOne(User_1.User, { id: req.session.userId });
+            return user;
+        });
+    }
     getAllUsers({ em }) {
         return __awaiter(this, void 0, void 0, function* () {
             const users = yield em.find(User_1.User, {});
             return users;
         });
     }
-    register(options, { em }) {
+    register(options, { req, em }) {
         return __awaiter(this, void 0, void 0, function* () {
             if (options.username.length <= 2) {
                 return {
@@ -107,12 +116,13 @@ let UserResolver = class UserResolver {
                     };
                 }
             }
+            req.session.userId = user.id;
             return {
                 user,
             };
         });
     }
-    login(options, { em }) {
+    login(options, { em, req }) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield em.findOne(User_1.User, {
                 username: options.username,
@@ -138,12 +148,17 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
+            req.session.userId = user.id;
             return {
                 user,
             };
         });
     }
 };
+__decorate([
+    (0, type_graphql_1.Query)(() => User_1.User, { nullable: true }),
+    __param(0, (0, type_graphql_1.Ctx)())
+], UserResolver.prototype, "me", null);
 __decorate([
     (0, type_graphql_1.Query)(() => [User_1.User]),
     __param(0, (0, type_graphql_1.Ctx)())

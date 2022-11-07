@@ -11,6 +11,7 @@ import {
 } from "type-graphql";
 import { User } from "../entities/User";
 import argon2 from "argon2";
+import { emit } from "process";
 
 // ok so resolver is where we make our commands, kinda like the controllers
 
@@ -54,6 +55,17 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Query(() => User, { nullable: true })
+  async me(@Ctx() { em, req }: MyContext) {
+    if (!req.session.userId) {
+      return null;
+    }
+    // you are not logged in
+
+    const user = await em.findOne(User, { id: req.session.userId });
+    return user;
+  }
+
   @Query(() => [User])
   async getAllUsers(@Ctx() { em }: MyContext): Promise<User[]> {
     const users = await em.find(User, {});
@@ -63,7 +75,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async register(
     @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
-    @Ctx() { em }: MyContext
+    @Ctx() { req, em }: MyContext
   ): Promise<UserResponse> {
     if (options.username.length <= 2) {
       return {
@@ -110,6 +122,10 @@ export class UserResolver {
         };
       }
     }
+
+    req.session.userId = user.id;
+    // log in the user once successfully registered
+
     return {
       user,
     };
@@ -118,7 +134,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async login(
     @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     const user = await em.findOne(User, {
       username: options.username,
@@ -147,6 +163,8 @@ export class UserResolver {
         ],
       };
     }
+
+    req.session.userId = user.id;
 
     return {
       user,
