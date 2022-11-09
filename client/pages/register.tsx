@@ -1,11 +1,18 @@
-import React from "react";
+import React, {
+  ChangeEvent,
+  ChangeEventHandler,
+  FunctionComponent,
+} from "react";
 import {
+  Button,
   FormControl,
   FormErrorMessage,
   FormLabel,
   Input,
 } from "@chakra-ui/react";
 import { Formik, Form } from "formik";
+import Wrapper from "../components/Wrapper";
+import InputField from "../components/InputField";
 
 interface RegisterProps {}
 
@@ -14,43 +21,38 @@ interface FormValuesProps {
     username: string;
     password: string;
   };
-  handleChange: Function;
+  handleChange: ChangeEventHandler;
 }
 
 const Register: React.FC<RegisterProps> = ({}) => {
-  const handleChange = () => {};
-
   return (
-    <Formik
-      initialValues={{ username: "", password: "" }}
-      onSubmit={(values) => console.log(values)}
-    >
-      {({ values, handleChange }: FormValuesProps) => (
-        <Form>
-          <FormControl>
-            <FormLabel htmlFor="username">Username</FormLabel>
-            <Input
+    <Wrapper variant="small">
+      <Formik
+        initialValues={{ username: "", password: "" }}
+        onSubmit={(values) => console.log(values)}
+      >
+        {({ values }: FormValuesProps) => (
+          <Form>
+            <InputField
+              name="username"
+              placeholder="enter username"
               value={values.username}
-              id="username"
-              placeholder="username"
-              onChange={() => handleChange}
+              label="username"
             />
-            <FormErrorMessage>{}</FormErrorMessage>
-          </FormControl>
 
-          <FormControl>
-            <FormLabel htmlFor="password">Password</FormLabel>
-            <Input
+            <InputField
+              name="password"
+              placeholder="enter password"
               value={values.password}
-              id="password"
-              placeholder="password"
-              onChange={() => handleChange}
+              label="password"
             />
-            <FormErrorMessage>{}</FormErrorMessage>
-          </FormControl>
-        </Form>
-      )}
-    </Formik>
+
+            {/* <button type="submit">click me</button> */}
+            <Button type="submit">Submit</Button>
+          </Form>
+        )}
+      </Formik>
+    </Wrapper>
   );
 };
 export default Register;
