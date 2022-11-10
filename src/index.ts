@@ -35,6 +35,13 @@ const main = async () => {
   // console.log(posts);
 
   const app: Application = express();
+  app.use(
+    cors({
+      origin: ["http://localhost:3000", "https://studio.apollographql.com"],
+      credentials: true,
+      allowedHeaders: ["Content-Type", "Authorization"],
+    })
+  );
 
   let RedisStore = connectRedis(session);
   let redisClient: any = redis.createClient({ legacyMode: true });
@@ -76,10 +83,7 @@ const main = async () => {
   await apolloServer.start();
   apolloServer.applyMiddleware({
     app,
-    cors: {
-      origin: ["http://localhost:3000", "https://studio.apollographql.com"],
-      credentials: true,
-    },
+    cors: false,
   });
 
   if (!__prod__) app.use(morgan("dev"));

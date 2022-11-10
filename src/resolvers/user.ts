@@ -82,7 +82,7 @@ export class UserResolver {
         errors: [
           {
             field: "username",
-            message: "length must be greater 2",
+            message: "Length must be greater 2!",
           },
         ],
       };
@@ -93,7 +93,7 @@ export class UserResolver {
         errors: [
           {
             field: "password",
-            message: "length must be greater 2",
+            message: "Length must be greater 2!",
           },
         ],
       };
@@ -116,7 +116,7 @@ export class UserResolver {
           errors: [
             {
               field: "username",
-              message: "username already taken",
+              message: "Username already taken!",
             },
           ],
         };
@@ -145,7 +145,7 @@ export class UserResolver {
         errors: [
           {
             field: "username",
-            message: "username doesn't exist",
+            message: "Username doesn't exist!",
           },
         ],
       };
@@ -158,7 +158,7 @@ export class UserResolver {
         errors: [
           {
             field: "password",
-            message: "passwords don't match",
+            message: "Passwords don't match!",
           },
         ],
       };

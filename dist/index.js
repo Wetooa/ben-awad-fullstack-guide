@@ -51,11 +51,17 @@ const morgan_1 = __importDefault(require("morgan"));
 require("reflect-metadata");
 require("dotenv/config");
 require("colors");
+const cors_1 = __importDefault(require("cors"));
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const orm = yield core_1.MikroORM.init(mikro_orm_config_1.default);
     yield orm.getMigrator().up();
     const fork = orm.em.fork({});
     const app = (0, express_1.default)();
+    app.use((0, cors_1.default)({
+        origin: ["http://localhost:3000", "https://studio.apollographql.com"],
+        credentials: true,
+        allowedHeaders: ["Content-Type", "Authorization"],
+    }));
     let RedisStore = (0, connect_redis_1.default)(express_session_1.default);
     let redisClient = redis.createClient({ legacyMode: true });
     redisClient
@@ -91,10 +97,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     yield apolloServer.start();
     apolloServer.applyMiddleware({
         app,
-        cors: {
-            origin: ["http://localhost:3000", "https://studio.apollographql.com"],
-            credentials: true,
-        },
+        cors: false,
     });
     if (!constants_1.__prod__)
         app.use((0, morgan_1.default)("dev"));
