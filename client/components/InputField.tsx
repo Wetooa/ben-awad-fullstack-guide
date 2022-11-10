@@ -10,24 +10,22 @@ import React, { InputHTMLAttributes } from "react";
 type InputFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   name: string;
   label: string;
-  placeholder: string;
 };
 
-const InputField: React.FC<InputFieldProps> = (props) => {
+const InputField: React.FC<InputFieldProps> = ({
+  label,
+  size: _,
+  ...props
+}) => {
   const [field, { error }] = useField(props);
 
   return (
     <FormControl isInvalid={!!error}>
       <FormLabel htmlFor={field.name} style={{ textTransform: "capitalize" }}>
-        {props.label}
+        {label}
       </FormLabel>
-      <Input
-        {...field}
-        id={field.name}
-        placeholder={
-          props.placeholder[0].toUpperCase() + props.placeholder.substring(1)
-        }
-      />
+      <Input {...field} id={field.name} {...props} />
+
       {error ? <FormErrorMessage>{error}</FormErrorMessage> : null}
     </FormControl>
   );

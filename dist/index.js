@@ -92,7 +92,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     apolloServer.applyMiddleware({
         app,
         cors: {
-            origin: ["https://localhost:3000", "https://studio.apollographql.com"],
+            origin: ["http://localhost:3000", "https://studio.apollographql.com"],
             credentials: true,
         },
     });

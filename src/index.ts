@@ -20,6 +20,7 @@ import morgan from "morgan";
 import "reflect-metadata";
 import "dotenv/config";
 import "colors";
+import cors from "cors";
 
 const main = async () => {
   const orm = await MikroORM.init(mikroOrmConfig);
@@ -76,7 +77,7 @@ const main = async () => {
   apolloServer.applyMiddleware({
     app,
     cors: {
-      origin: ["https://localhost:3000", "https://studio.apollographql.com"],
+      origin: ["http://localhost:3000", "https://studio.apollographql.com"],
       credentials: true,
     },
   });

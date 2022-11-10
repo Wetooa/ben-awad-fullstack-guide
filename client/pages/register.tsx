@@ -1,58 +1,71 @@
-import React, {
-  ChangeEvent,
-  ChangeEventHandler,
-  FunctionComponent,
-} from "react";
-import {
-  Button,
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
-  Input,
-} from "@chakra-ui/react";
+import React from "react";
+import { Box, Button } from "@chakra-ui/react";
 import { Formik, Form } from "formik";
 import Wrapper from "../components/Wrapper";
 import InputField from "../components/InputField";
+import { useMutation } from "urql";
 
 interface RegisterProps {}
 
-interface FormValuesProps {
-  values: {
-    username: string;
-    password: string;
-  };
-  handleChange: ChangeEventHandler;
+const REGISTER_MUTATION = `
+mutation Register($username: String!, $password: String!) {
+  register(options: {username: $username, password: $password}) {
+    errors {
+      field
+      message
+    }
+    user {
+      id
+      createdAt
+      updatedAt
+      username
+    }
+  }
 }
+`;
 
 const Register: React.FC<RegisterProps> = ({}) => {
+  const [{}, register] = useMutation(REGISTER_MUTATION);
+
   return (
     <Wrapper variant="small">
       <Formik
         initialValues={{ username: "", password: "" }}
-        onSubmit={(values) => console.log(values)}
+        onSubmit={async (values) => {
+          const response = await register(values);
+          return response;
+        }}
       >
-        {({ values }: FormValuesProps) => (
+        {({ isSubmitting }) => (
           <Form>
             <InputField
               name="username"
-              placeholder="enter username"
-              value={values.username}
+              placeholder="Enter username"
               label="username"
             />
+            <Box mt={4}>
+              <InputField
+                name="password"
+                placeholder="Enter password"
+                label="password"
+                type="password"
+              />
+            </Box>
 
-            <InputField
-              name="password"
-              placeholder="enter password"
-              value={values.password}
-              label="password"
-            />
-
-            {/* <button type="submit">click me</button> */}
-            <Button type="submit">Submit</Button>
+            <Button
+              isLoading={isSubmitting}
+              mt={4}
+              type="submit"
+              colorScheme="teal"
+              variant="solid"
+            >
+              Register
+            </Button>
           </Form>
         )}
       </Formik>
     </Wrapper>
   );
 };
+
 export default Register;
