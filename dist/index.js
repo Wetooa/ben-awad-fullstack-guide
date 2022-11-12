@@ -60,7 +60,6 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     app.use((0, cors_1.default)({
         origin: ["http://localhost:3000", "https://studio.apollographql.com"],
         credentials: true,
-        allowedHeaders: ["Content-Type", "Authorization"],
     }));
     let RedisStore = (0, connect_redis_1.default)(express_session_1.default);
     let redisClient = redis.createClient({ legacyMode: true });
@@ -70,7 +69,6 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         .catch((_) => {
         console.log("[redis]: redis client failed to conenct".bgRed.underline);
     });
-    app.set("trust proxy", !constants_1.__prod__);
     app.use((0, express_session_1.default)({
         name: "qid",
         store: new RedisStore({
@@ -79,13 +77,14 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         }),
         cookie: {
             maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
-            httpOnly: true,
+            httpOnly: false,
             secure: true,
-            sameSite: constants_1.__prod__ ? "lax" : "none",
+            sameSite: "none",
         },
         secret: "envlater",
         resave: false,
         saveUninitialized: false,
+        proxy: true,
     }));
     const apolloServer = new apollo_server_express_1.ApolloServer({
         schema: yield (0, type_graphql_1.buildSchema)({

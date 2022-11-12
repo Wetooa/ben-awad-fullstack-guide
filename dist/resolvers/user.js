@@ -76,26 +76,21 @@ let UserResolver = class UserResolver {
     }
     register(options, { req, em }) {
         return __awaiter(this, void 0, void 0, function* () {
+            const err = [];
             if (options.username.length <= 2) {
-                return {
-                    errors: [
-                        {
-                            field: "username",
-                            message: "Length must be greater 2!",
-                        },
-                    ],
-                };
+                err.push({
+                    field: "username",
+                    message: "Length must be greater than 2!",
+                });
             }
             if (options.password.length <= 2) {
-                return {
-                    errors: [
-                        {
-                            field: "password",
-                            message: "Length must be greater 2!",
-                        },
-                    ],
-                };
+                err.push({
+                    field: "password",
+                    message: "Length must be greater than 2!",
+                });
             }
+            if (err)
+                return { errors: err };
             const hashedPassword = yield argon2_1.default.hash(options.password);
             const user = em.create(User_1.User, {
                 username: options.username,

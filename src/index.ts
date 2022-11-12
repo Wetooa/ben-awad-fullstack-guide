@@ -39,7 +39,6 @@ const main = async () => {
     cors({
       origin: ["http://localhost:3000", "https://studio.apollographql.com"],
       credentials: true,
-      allowedHeaders: ["Content-Type", "Authorization"],
     })
   );
 
@@ -52,7 +51,7 @@ const main = async () => {
       console.log("[redis]: redis client failed to conenct".bgRed.underline);
     });
 
-  app.set("trust proxy", !__prod__);
+  // app.set("trust proxy", !__prod__);
 
   app.use(
     session({
@@ -63,13 +62,14 @@ const main = async () => {
       }),
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
-        httpOnly: true,
+        httpOnly: false,
         secure: true, // cookie only works in https
-        sameSite: __prod__ ? "lax" : "none", // csrf
+        sameSite: "none", // csrf (changed this from lax and cookie was now sent to client)
       },
       secret: "envlater",
       resave: false,
       saveUninitialized: false,
+      proxy: true,
     })
   );
 
