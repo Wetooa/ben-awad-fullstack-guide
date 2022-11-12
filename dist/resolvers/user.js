@@ -89,7 +89,7 @@ let UserResolver = class UserResolver {
                     message: "Length must be greater than 2!",
                 });
             }
-            if (err)
+            if (err.length >= 1)
                 return { errors: err };
             const hashedPassword = yield argon2_1.default.hash(options.password);
             const user = em.create(User_1.User, {

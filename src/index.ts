@@ -51,20 +51,20 @@ const main = async () => {
       console.log("[redis]: redis client failed to conenct".bgRed.underline);
     });
 
-  // app.set("trust proxy", !__prod__);
+  app.set("trust proxy", !__prod__);
 
   app.use(
     session({
       name: "qid",
       store: new RedisStore({
         client: redisClient,
-        disableTouch: true,
+        // disableTouch: true,
       }),
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
         httpOnly: false,
-        secure: true, // cookie only works in https
-        sameSite: "none", // csrf (changed this from lax and cookie was now sent to client)
+        secure: false, // cookie only works in https
+        sameSite: "lax", // csrf (changed this from lax and cookie was now sent to client)
       },
       secret: "envlater",
       resave: false,

@@ -69,17 +69,17 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         .catch((_) => {
         console.log("[redis]: redis client failed to conenct".bgRed.underline);
     });
+    app.set("trust proxy", !constants_1.__prod__);
     app.use((0, express_session_1.default)({
         name: "qid",
         store: new RedisStore({
             client: redisClient,
-            disableTouch: true,
         }),
         cookie: {
             maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
             httpOnly: false,
-            secure: true,
-            sameSite: "none",
+            secure: false,
+            sameSite: "lax",
         },
         secret: "envlater",
         resave: false,

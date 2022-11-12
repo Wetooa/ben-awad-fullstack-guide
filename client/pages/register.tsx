@@ -5,11 +5,14 @@ import Wrapper from "../components/Wrapper";
 import InputField from "../components/InputField";
 import { useRegisterMutation } from "../generated/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
+import { useRouter } from "next/router";
+import { render } from "react-dom";
 
 interface RegisterProps {}
 
 const Register: React.FC<RegisterProps> = ({}) => {
   const [{}, register] = useRegisterMutation();
+  const router = useRouter();
 
   return (
     <Wrapper variant="small">
@@ -17,8 +20,14 @@ const Register: React.FC<RegisterProps> = ({}) => {
         initialValues={{ username: "", password: "" }}
         onSubmit={async (values, { setErrors }) => {
           const response = await register(values);
+
           if (response.data?.register.errors) {
             setErrors(toErrorMap(response.data.register.errors));
+          } else if (response.data?.register.user) {
+            // worked
+            setTimeout(() => {
+              router.push("/");
+            }, 1000);
           }
         }}
       >
@@ -47,6 +56,23 @@ const Register: React.FC<RegisterProps> = ({}) => {
             >
               Register
             </Button>
+
+            {/* <Button
+              isLoading={isSubmitting}
+              mt={4}
+              colorScheme="teal"
+              variant="solid"
+              onClick={() => {
+                const currTheme = localStorage.getItem("chakra-ui-color-mode");
+
+                localStorage.setItem(
+                  "chakra-ui-color-mode",
+                  currTheme === "light" ? "dark" : "light"
+                );
+              }}
+            >
+              Light/Dark
+            </Button> */}
           </Form>
         )}
       </Formik>

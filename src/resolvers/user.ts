@@ -11,7 +11,7 @@ import {
 } from "type-graphql";
 import { User } from "../entities/User";
 import argon2 from "argon2";
-import { emit } from "process";
+import { EntityManager } from "@mikro-orm/postgresql";
 
 // ok so resolver is where we make our commands, kinda like the controllers
 
@@ -93,16 +93,29 @@ export class UserResolver {
       });
     }
 
-    if (err) return { errors: err };
+    if (err.length >= 1) return { errors: err };
 
     const hashedPassword = await argon2.hash(options.password);
     const user = em.create(User, {
       username: options.username,
       password: hashedPassword,
     });
-
+    // let user;
     try {
       // if this fails, we dont create an id for it hence why is says non nullable thingy
+      // const result = await (em as EntityManager)
+      //   .createQueryBuilder(User)
+      //   .getKnexQuery()
+      //   .insert({
+      //     username: options.username,
+      //     password: hashedPassword,
+      //     created_at: new Date(),
+      //     updated_at: new Date(),
+      //   })
+      //   .returning("*");
+
+      // user = result[0];
+
       await em.persistAndFlush(user);
     } catch (error: any) {
       // duplicated user error
