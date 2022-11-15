@@ -24,3 +24,18 @@ a {
     background: black;
   }
 }
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading {
+  border: 5px solid aqua;
+  border-radius: 100%;
+  border-top-color: transparent;
+  width: 6rem;
+  height: 6rem;
+  animation: spinner 2s linear infinite;
+}
