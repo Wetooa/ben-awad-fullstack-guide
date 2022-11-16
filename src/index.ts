@@ -21,8 +21,10 @@ import "reflect-metadata";
 import "dotenv/config";
 import "colors";
 import cors from "cors";
+import { sendEmail } from "./utils/sendEmail";
 
 const main = async () => {
+  sendEmail("wetooa@wetooa.com", "hello there");
   const orm = await MikroORM.init(mikroOrmConfig);
   await orm.getMigrator().up();
   const fork = orm.em.fork({});

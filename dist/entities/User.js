@@ -30,6 +30,10 @@ __decorate([
 __decorate([
     (0, type_graphql_1.Field)(() => String),
     (0, core_1.Property)({ type: "text", unique: true })
+], User.prototype, "email", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => String),
+    (0, core_1.Property)({ type: "text", unique: true })
 ], User.prototype, "username", void 0);
 __decorate([
     (0, core_1.Property)({ type: "text" })

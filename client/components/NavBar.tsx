@@ -1,16 +1,17 @@
 import { Box, Button, Flex } from "@chakra-ui/react";
 import Link from "next/link";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useLogoutMutation, useMeQuery } from "../generated/graphql";
 import Loading from "./Loading";
 
 interface NavBarProps {}
 
 const NavBar: React.FC<NavBarProps> = ({}) => {
-  let isServer = false;
+  const [isServer, setIsServer] = useState(true);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    isServer = typeof window === "undefined";
+    setIsServer(typeof window === "undefined");
   }, []);
 
   const [{ fetching: logoutFetching }, logout] = useLogoutMutation();

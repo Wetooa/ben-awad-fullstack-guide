@@ -31,6 +31,8 @@ NAME(@Ctx() {CONTEXT_THINGY}: CONTEXT_TYPE_PROP): RETURN TYPE {
 class UsernamePasswordInput {
   @Field(() => String)
   username!: string;
+  @Field(() => String, { nullable: true })
+  email!: string;
   @Field(() => String)
   password!: string;
 }
@@ -55,6 +57,15 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Mutation(() => Boolean)
+  async forgotPassword(
+    @Arg("email", () => String) email: string,
+    @Ctx() { em }: MyContext
+  ) {
+    const person = await em.findOne(User, { email });
+    return true;
+  }
+
   @Query(() => User, { nullable: true })
   async me(@Ctx() { em, req }: MyContext) {
     if (!req.session.userId) {
@@ -78,6 +89,15 @@ export class UserResolver {
     @Ctx() { req, em }: MyContext
   ): Promise<UserResponse> {
     const err: FieldError[] = [];
+    // very cool and easy regex lol yea wohoo at least I can understand this hahahahha
+    const emailRegex = /^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$/;
+
+    if (!options.email.match(emailRegex)) {
+      err.push({
+        field: "email",
+        message: "Invalid email!",
+      });
+    }
 
     if (options.username.length <= 2) {
       err.push({
@@ -99,6 +119,7 @@ export class UserResolver {
     const user = em.create(User, {
       username: options.username,
       password: hashedPassword,
+      email: options.email,
     });
     // let user;
     try {
@@ -133,7 +154,7 @@ export class UserResolver {
     }
 
     req.session.userId = user.id;
-    // log in the user once successfully registered
+    // log in the user once successfully registered`
 
     return {
       user,

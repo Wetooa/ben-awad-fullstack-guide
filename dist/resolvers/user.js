@@ -32,6 +32,9 @@ __decorate([
     (0, type_graphql_1.Field)(() => String)
 ], UsernamePasswordInput.prototype, "username", void 0);
 __decorate([
+    (0, type_graphql_1.Field)(() => String, { nullable: true })
+], UsernamePasswordInput.prototype, "email", void 0);
+__decorate([
     (0, type_graphql_1.Field)(() => String)
 ], UsernamePasswordInput.prototype, "password", void 0);
 UsernamePasswordInput = __decorate([
@@ -60,6 +63,12 @@ UserResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], UserResponse);
 let UserResolver = class UserResolver {
+    forgotPassword(email, { em }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const person = yield em.findOne(User_1.User, { email });
+            return true;
+        });
+    }
     me({ em, req }) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!req.session.userId) {
@@ -78,6 +87,13 @@ let UserResolver = class UserResolver {
     register(options, { req, em }) {
         return __awaiter(this, void 0, void 0, function* () {
             const err = [];
+            const emailRegex = /^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$/;
+            if (!options.email.match(emailRegex)) {
+                err.push({
+                    field: "email",
+                    message: "Invalid email!",
+                });
+            }
             if (options.username.length <= 2) {
                 err.push({
                     field: "username",
@@ -96,6 +112,7 @@ let UserResolver = class UserResolver {
             const user = em.create(User_1.User, {
                 username: options.username,
                 password: hashedPassword,
+                email: options.email,
             });
             try {
                 yield em.persistAndFlush(user);
@@ -164,6 +181,11 @@ let UserResolver = class UserResolver {
         });
     }
 };
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    __param(0, (0, type_graphql_1.Arg)("email", () => String)),
+    __param(1, (0, type_graphql_1.Ctx)())
+], UserResolver.prototype, "forgotPassword", null);
 __decorate([
     (0, type_graphql_1.Query)(() => User_1.User, { nullable: true }),
     __param(0, (0, type_graphql_1.Ctx)())

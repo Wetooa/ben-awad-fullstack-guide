@@ -52,7 +52,9 @@ require("reflect-metadata");
 require("dotenv/config");
 require("colors");
 const cors_1 = __importDefault(require("cors"));
+const sendEmail_1 = require("./utils/sendEmail");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
+    (0, sendEmail_1.sendEmail)("wetooa@wetooa.com", "hello there");
     const orm = yield core_1.MikroORM.init(mikro_orm_config_1.default);
     yield orm.getMigrator().up();
     const fork = orm.em.fork({});
