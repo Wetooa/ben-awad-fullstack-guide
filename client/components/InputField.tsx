@@ -24,7 +24,7 @@ const InputField: React.FC<InputFieldProps> = ({
       <FormLabel htmlFor={field.name} style={{ textTransform: "capitalize" }}>
         {label}
       </FormLabel>
-      <Input {...field} id={field.name} {...props} />
+      <Input {...field} id={field.name} {...props} autoComplete="on" />
 
       {error ? <FormErrorMessage>{error}</FormErrorMessage> : null}
     </FormControl>

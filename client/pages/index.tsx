@@ -4,7 +4,16 @@ import { createUrqlClient } from "../utils/createUrqlClient";
 import { usePostsQuery } from "../generated/graphql";
 import Loading from "../components/Loading";
 
-export default withUrqlClient(createUrqlClient)(function Home() {
+// ssr results in the page loading before its sent to client so loading thingy doesnt show on the client
+
+// u can either ssr or not ssr
+// with ssr, ur browser will load for a while before ur page shows so custom loading stuff in the client side will be obsolete
+
+// without ssr, ur page would load but requests which take time will cause ur page to load for a while so u can implement custom made spinners client side if u want that to be the case
+
+// no need to ssr everything. only ssr dynamic pages which need server requests while static pages such as login forms can be left with no ssr
+
+export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
   const [{ data, fetching }] = usePostsQuery();
 
   return (
