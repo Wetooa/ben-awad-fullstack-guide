@@ -71,9 +71,10 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     });
     app.set("trust proxy", !constants_1.__prod__);
     app.use((0, express_session_1.default)({
-        name: "qid",
+        name: constants_1.COOKIE_NAME,
         store: new RedisStore({
             client: redisClient,
+            disableTouch: true,
         }),
         cookie: {
             maxAge: 1000 * 60 * 60 * 24 * 365 * 10,

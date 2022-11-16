@@ -14,7 +14,7 @@ import * as redis from "redis";
 import session from "express-session";
 import connectRedis from "connect-redis";
 
-import { __prod__ } from "./constants";
+import { COOKIE_NAME, __prod__ } from "./constants";
 import morgan from "morgan";
 
 import "reflect-metadata";
@@ -55,16 +55,18 @@ const main = async () => {
 
   app.use(
     session({
-      name: "qid",
+      name: COOKIE_NAME,
       store: new RedisStore({
         client: redisClient,
-        // disableTouch: true,
+        disableTouch: true,
       }),
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
         httpOnly: false,
         secure: false, // cookie only works in https
         sameSite: "lax", // csrf (changed this from lax and cookie was now sent to client)
+
+        // noticed smth, when using apollo server, use sameSite: "none" and secure: true, else, do sameSite: "lax" and secure: false
       },
       secret: "envlater",
       resave: false,

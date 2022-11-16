@@ -25,6 +25,7 @@ exports.UserResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 const User_1 = require("../entities/User");
 const argon2_1 = __importDefault(require("argon2"));
+const constants_1 = require("../constants");
 let UsernamePasswordInput = class UsernamePasswordInput {
 };
 __decorate([
@@ -149,6 +150,19 @@ let UserResolver = class UserResolver {
             };
         });
     }
+    logout({ req, res }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve) => req.session.destroy((err) => {
+                if (err) {
+                    console.log(err);
+                    resolve(false);
+                    return;
+                }
+                res.clearCookie(constants_1.COOKIE_NAME);
+                resolve(true);
+            }));
+        });
+    }
 };
 __decorate([
     (0, type_graphql_1.Query)(() => User_1.User, { nullable: true }),
@@ -168,6 +182,10 @@ __decorate([
     __param(0, (0, type_graphql_1.Arg)("options", () => UsernamePasswordInput)),
     __param(1, (0, type_graphql_1.Ctx)())
 ], UserResolver.prototype, "login", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    __param(0, (0, type_graphql_1.Ctx)())
+], UserResolver.prototype, "logout", null);
 UserResolver = __decorate([
     (0, type_graphql_1.Resolver)()
 ], UserResolver);
