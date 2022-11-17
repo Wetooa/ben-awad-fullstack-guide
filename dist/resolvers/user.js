@@ -27,6 +27,8 @@ const User_1 = require("../entities/User");
 const argon2_1 = __importDefault(require("argon2"));
 const constants_1 = require("../constants");
 const validate_1 = require("../utils/validate");
+const sendEmail_1 = require("../utils/sendEmail");
+const uuid_1 = require("uuid");
 let UsernamePasswordInput = class UsernamePasswordInput {
 };
 __decorate([
@@ -66,9 +68,64 @@ UserResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], UserResponse);
 let UserResolver = class UserResolver {
-    forgotPassword(email, { em }) {
+    changePassword(token, newPassword, reTypePassword, { redis, em }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const person = yield em.findOne(User_1.User, { email });
+            if (newPassword.length <= 2) {
+                return {
+                    errors: [
+                        {
+                            field: "newPassword",
+                            message: "Length must be greater than 2!",
+                        },
+                    ],
+                };
+            }
+            if (newPassword !== reTypePassword) {
+                return {
+                    errors: [
+                        {
+                            field: "reTypePassword",
+                            message: "Passwords don't match!",
+                        },
+                    ],
+                };
+            }
+            const userId = yield redis.get(constants_1.FORGET_PASSWORD_PREFIX + token);
+            if (!userId) {
+                return {
+                    errors: [
+                        {
+                            field: "token",
+                            message: "Token is expired!",
+                        },
+                    ],
+                };
+            }
+            const user = yield em.findOne(User_1.User, { id: parseInt(userId) });
+            if (!user) {
+                return {
+                    errors: [
+                        {
+                            field: "token",
+                            message: "User no longer exists!",
+                        },
+                    ],
+                };
+            }
+            user.password = yield argon2_1.default.hash(newPassword);
+            yield em.persistAndFlush(user);
+            return { user };
+        });
+    }
+    forgotPassword(email, { em, redis }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield em.findOne(User_1.User, { email });
+            if (!user) {
+                return false;
+            }
+            const token = (0, uuid_1.v4)();
+            yield redis.set(constants_1.FORGET_PASSWORD_PREFIX + token, user.id, "EX", 1000 * 60 * 60 * 24 * 3);
+            yield (0, sendEmail_1.sendEmail)(email, `<a href="http://localhost:3000/change-password/${token}">reset password</a>`);
             return true;
         });
     }
@@ -166,6 +223,13 @@ let UserResolver = class UserResolver {
         });
     }
 };
+__decorate([
+    (0, type_graphql_1.Mutation)(() => UserResponse),
+    __param(0, (0, type_graphql_1.Arg)("token", () => String)),
+    __param(1, (0, type_graphql_1.Arg)("newPassword", () => String)),
+    __param(2, (0, type_graphql_1.Arg)("reTypePassword", () => String)),
+    __param(3, (0, type_graphql_1.Ctx)())
+], UserResolver.prototype, "changePassword", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Boolean),
     __param(0, (0, type_graphql_1.Arg)("email", () => String)),

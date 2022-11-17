@@ -5,12 +5,13 @@ import express, { Application } from "express";
 import { MikroORM } from "@mikro-orm/core";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
+import { sendEmail } from "./utils/sendEmail";
 
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 
-import * as redis from "redis";
+import Redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
 
@@ -21,7 +22,6 @@ import "reflect-metadata";
 import "dotenv/config";
 import "colors";
 import cors from "cors";
-import { sendEmail } from "./utils/sendEmail";
 
 const main = async () => {
   sendEmail("wetooa@wetooa.com", "hello there");
@@ -45,13 +45,15 @@ const main = async () => {
   );
 
   let RedisStore = connectRedis(session);
-  let redisClient: any = redis.createClient({ legacyMode: true });
-  redisClient
-    .connect()
-    .then(() => console.log("[redis]: redis client connected".red.underline))
-    .catch((_: Error) => {
-      console.log("[redis]: redis client failed to conenct".bgRed.underline);
-    });
+  let redis: any = new Redis();
+
+  // for some reason this isn't needed anymore lol
+  // redis
+  //   .connect()
+  //   .then(() => console.log("[redis]: redis client connected".red.underline))
+  //   .catch((_: Error) => {
+  //     console.log("[redis]: redis client failed to conenct".bgRed.underline);
+  //   });
 
   app.set("trust proxy", !__prod__);
 
@@ -59,7 +61,7 @@ const main = async () => {
     session({
       name: COOKIE_NAME,
       store: new RedisStore({
-        client: redisClient,
+        client: redis,
         disableTouch: true,
       }),
       cookie: {
@@ -82,7 +84,7 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => ({ em: fork, req, res }),
+    context: ({ req, res }) => ({ em: fork, req, res, redis }),
   });
   await apolloServer.start();
   apolloServer.applyMiddleware({

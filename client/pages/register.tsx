@@ -45,7 +45,7 @@ const Register: React.FC<RegisterProps> = ({}) => {
               <InputField
                 name="email"
                 placeholder="Enter email"
-                label="Email"
+                label="email"
               />
             </Box>
 
