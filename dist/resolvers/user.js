@@ -21,11 +21,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserResolver = void 0;
+exports.UserResolver = exports.FieldError = exports.UsernamePasswordInput = void 0;
 const type_graphql_1 = require("type-graphql");
 const User_1 = require("../entities/User");
 const argon2_1 = __importDefault(require("argon2"));
 const constants_1 = require("../constants");
+const validate_1 = require("../utils/validate");
 let UsernamePasswordInput = class UsernamePasswordInput {
 };
 __decorate([
@@ -40,6 +41,7 @@ __decorate([
 UsernamePasswordInput = __decorate([
     (0, type_graphql_1.InputType)()
 ], UsernamePasswordInput);
+exports.UsernamePasswordInput = UsernamePasswordInput;
 let FieldError = class FieldError {
 };
 __decorate([
@@ -51,6 +53,7 @@ __decorate([
 FieldError = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], FieldError);
+exports.FieldError = FieldError;
 let UserResponse = class UserResponse {
 };
 __decorate([
@@ -86,26 +89,7 @@ let UserResolver = class UserResolver {
     }
     register(options, { req, em }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const err = [];
-            const emailRegex = /^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$/;
-            if (!options.email.match(emailRegex)) {
-                err.push({
-                    field: "email",
-                    message: "Invalid email!",
-                });
-            }
-            if (options.username.length <= 2) {
-                err.push({
-                    field: "username",
-                    message: "Length must be greater than 2!",
-                });
-            }
-            if (options.password.length <= 2) {
-                err.push({
-                    field: "password",
-                    message: "Length must be greater than 2!",
-                });
-            }
+            const err = (0, validate_1.validate)(options);
             if (err.length >= 1)
                 return { errors: err };
             const hashedPassword = yield argon2_1.default.hash(options.password);
@@ -119,11 +103,12 @@ let UserResolver = class UserResolver {
             }
             catch (error) {
                 if (error.code === "23505") {
+                    let fieldWithError = error.detail.match(/(?<=\()\w*(?=\)=\()/)[0];
                     return {
                         errors: [
                             {
-                                field: "username",
-                                message: "Username already taken!",
+                                field: fieldWithError,
+                                message: fieldWithError + " already taken!",
                             },
                         ],
                     };

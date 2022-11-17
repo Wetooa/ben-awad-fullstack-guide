@@ -12,6 +12,7 @@ import {
 import { User } from "../entities/User";
 import argon2 from "argon2";
 import { COOKIE_NAME } from "../constants";
+import { validate } from "../utils/validate";
 
 // ok so resolver is where we make our commands, kinda like the controllers
 
@@ -28,7 +29,7 @@ NAME(@Ctx() {CONTEXT_THINGY}: CONTEXT_TYPE_PROP): RETURN TYPE {
 // we can use bcrypt for hashing but for this we will use argon2
 
 @InputType()
-class UsernamePasswordInput {
+export class UsernamePasswordInput {
   @Field(() => String)
   username!: string;
   @Field(() => String, { nullable: true })
@@ -38,7 +39,7 @@ class UsernamePasswordInput {
 }
 
 @ObjectType()
-class FieldError {
+export class FieldError {
   @Field(() => String)
   field!: string;
 
@@ -88,31 +89,7 @@ export class UserResolver {
     @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
     @Ctx() { req, em }: MyContext
   ): Promise<UserResponse> {
-    const err: FieldError[] = [];
-    // very cool and easy regex lol yea wohoo at least I can understand this hahahahha
-    const emailRegex = /^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$/;
-
-    if (!options.email.match(emailRegex)) {
-      err.push({
-        field: "email",
-        message: "Invalid email!",
-      });
-    }
-
-    if (options.username.length <= 2) {
-      err.push({
-        field: "username",
-        message: "Length must be greater than 2!",
-      });
-    }
-
-    if (options.password.length <= 2) {
-      err.push({
-        field: "password",
-        message: "Length must be greater than 2!",
-      });
-    }
-
+    const err = validate(options);
     if (err.length >= 1) return { errors: err };
 
     const hashedPassword = await argon2.hash(options.password);
@@ -121,6 +98,7 @@ export class UserResolver {
       password: hashedPassword,
       email: options.email,
     });
+
     // let user;
     try {
       // if this fails, we dont create an id for it hence why is says non nullable thingy
@@ -140,13 +118,17 @@ export class UserResolver {
       await em.persistAndFlush(user);
     } catch (error: any) {
       // duplicated user error
+
       if (error.code === "23505") {
         //|| error.detail.includes("already exists")) {
+
+        let fieldWithError = error.detail.match(/(?<=\()\w*(?=\)=\()/)[0];
+
         return {
           errors: [
             {
-              field: "username",
-              message: "Username already taken!",
+              field: fieldWithError,
+              message: fieldWithError + " already taken!",
             },
           ],
         };
@@ -161,6 +143,7 @@ export class UserResolver {
     };
   }
 
+  // u can change this however u like, i like looging in with the username as its much simplier so ill leave it at that
   @Mutation(() => UserResponse)
   async login(
     @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
