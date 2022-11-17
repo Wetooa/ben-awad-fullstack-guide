@@ -65,7 +65,7 @@ export class UserResolver {
     @Arg("token", () => String) token: string,
     @Arg("newPassword", () => String) newPassword: string,
     @Arg("reTypePassword", () => String) reTypePassword: string,
-    @Ctx() { redis, em }: MyContext
+    @Ctx() { redis, em, req }: MyContext
   ): Promise<UserResponse> {
     // validations
     if (newPassword.length <= 2) {
@@ -118,6 +118,9 @@ export class UserResolver {
 
     user.password = await argon2.hash(newPassword);
     await em.persistAndFlush(user);
+
+    // log in user after changing password
+    req.session.userId = user.id;
 
     return { user };
   }

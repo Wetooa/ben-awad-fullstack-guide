@@ -68,7 +68,7 @@ UserResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], UserResponse);
 let UserResolver = class UserResolver {
-    changePassword(token, newPassword, reTypePassword, { redis, em }) {
+    changePassword(token, newPassword, reTypePassword, { redis, em, req }) {
         return __awaiter(this, void 0, void 0, function* () {
             if (newPassword.length <= 2) {
                 return {
@@ -114,6 +114,7 @@ let UserResolver = class UserResolver {
             }
             user.password = yield argon2_1.default.hash(newPassword);
             yield em.persistAndFlush(user);
+            req.session.userId = user.id;
             return { user };
         });
     }

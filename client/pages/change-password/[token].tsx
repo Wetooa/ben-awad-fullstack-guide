@@ -4,22 +4,28 @@ import { NextPage } from "next";
 import router from "next/router";
 import InputField from "../../components/InputField";
 import Wrapper from "../../components/Wrapper";
+import { useChangePasswordMutation } from "../../generated/graphql";
 import { toErrorMap } from "../../utils/toErrorMap";
-import login from "../login";
 
-interface ChangePasswordProps {}
+interface ChangePasswordProps {
+  token: string;
+}
 
-const ChangePassword: NextPage<{ token: string }> = ({ token }) => {
+const ChangePassword: NextPage<{ token: string }> = ({
+  token,
+}: ChangePasswordProps) => {
+  const [{}, changePassword] = useChangePasswordMutation();
+
   return (
     <Wrapper>
       <Formik
         initialValues={{ newPassword: "", reTypePassword: "" }}
         onSubmit={async (values, { setErrors }) => {
-          const response = await login(values);
+          const response = await changePassword({ token, ...values });
 
-          if (response.data?.login.errors) {
-            setErrors(toErrorMap(response.data.login.errors));
-          } else if (response.data?.login.user) {
+          if (response.data?.changePassword.errors) {
+            setErrors(toErrorMap(response.data.changePassword.errors));
+          } else if (response.data?.changePassword.user) {
             // worked
             setTimeout(() => {
               router.push("/");
