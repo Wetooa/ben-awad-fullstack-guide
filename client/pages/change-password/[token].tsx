@@ -1,10 +1,12 @@
 import { Box, Button } from "@chakra-ui/react";
 import { Formik, Form } from "formik";
 import { NextPage } from "next";
+import { withUrqlClient } from "next-urql";
 import router from "next/router";
 import InputField from "../../components/InputField";
 import Wrapper from "../../components/Wrapper";
 import { useChangePasswordMutation } from "../../generated/graphql";
+import { createUrqlClient } from "../../utils/createUrqlClient";
 import { toErrorMap } from "../../utils/toErrorMap";
 
 interface ChangePasswordProps {
@@ -73,4 +75,4 @@ ChangePassword.getInitialProps = ({ query }) => {
   };
 };
 
-export default ChangePassword;
+export default withUrqlClient(createUrqlClient)(ChangePassword);
