@@ -1,8 +1,9 @@
-import { Box, Button } from "@chakra-ui/react";
+import { Box, Button, Flex, Link } from "@chakra-ui/react";
 import { Formik, Form } from "formik";
 import { NextPage } from "next";
 import { withUrqlClient } from "next-urql";
 import router from "next/router";
+import { useEffect, useState } from "react";
 import InputField from "../../components/InputField";
 import Wrapper from "../../components/Wrapper";
 import { useChangePasswordMutation } from "../../generated/graphql";
@@ -17,6 +18,13 @@ const ChangePassword: NextPage<{ token: string }> = ({
   token,
 }: ChangePasswordProps) => {
   const [{}, changePassword] = useChangePasswordMutation();
+  const [tokenError, setTokenError] = useState("");
+
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     setTokenError("");
+  //   }, 1000);
+  // }, [tokenError]);
 
   return (
     <Wrapper>
@@ -26,7 +34,12 @@ const ChangePassword: NextPage<{ token: string }> = ({
           const response = await changePassword({ token, ...values });
 
           if (response.data?.changePassword.errors) {
-            setErrors(toErrorMap(response.data.changePassword.errors));
+            const errorMap = toErrorMap(response.data.changePassword.errors);
+
+            if ("token" in errorMap) {
+              setTokenError(errorMap.token);
+            }
+            setErrors(errorMap);
           } else if (response.data?.changePassword.user) {
             // worked
             setTimeout(() => {
@@ -43,6 +56,21 @@ const ChangePassword: NextPage<{ token: string }> = ({
               label="new password"
               type="password"
             />
+
+            {tokenError && (
+              <Flex mt={4}>
+                <Box color="tomato" mr={4}>
+                  {tokenError}
+                </Box>
+                <Link
+                  href="/forgot-password"
+                  color="blue.400"
+                  textDecorationLine={"underline"}
+                >
+                  Click here to get a new one!
+                </Link>
+              </Flex>
+            )}
 
             <Box mt={4}>
               <InputField

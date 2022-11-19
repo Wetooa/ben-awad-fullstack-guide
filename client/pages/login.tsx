@@ -1,7 +1,7 @@
 import React from "react";
 import Wrapper from "../components/Wrapper";
 import InputField from "../components/InputField";
-import { Box, Button } from "@chakra-ui/react";
+import { Box, Button, Flex, Link } from "@chakra-ui/react";
 import { Formik, Form } from "formik";
 import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from "next/router";
@@ -48,15 +48,28 @@ const Login: React.FC<RegisterProps> = ({}) => {
               />
             </Box>
 
-            <Button
-              isLoading={isSubmitting}
-              mt={4}
-              type="submit"
-              colorScheme="teal"
-              variant="solid"
-            >
-              Login
-            </Button>
+            <Flex mt={2}>
+              <Link
+                href="/forgot-password"
+                color="blue.400"
+                textDecorationLine={"underline"}
+                ml="auto"
+              >
+                forgot password?
+              </Link>
+            </Flex>
+
+            <Box>
+              <Button
+                isLoading={isSubmitting}
+                mt={4}
+                type="submit"
+                colorScheme="teal"
+                variant="solid"
+              >
+                Login
+              </Button>
+            </Box>
 
             {/* <Button
               isLoading={isSubmitting}
