@@ -7,8 +7,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
-const core_1 = require("@mikro-orm/core");
 const type_graphql_1 = require("type-graphql");
+const typeorm_1 = require("typeorm");
 let User = class User {
     constructor() {
         this.createdAt = new Date();
@@ -17,30 +17,30 @@ let User = class User {
 };
 __decorate([
     (0, type_graphql_1.Field)(() => type_graphql_1.Int),
-    (0, core_1.PrimaryKey)({ type: "number" })
+    PrimaryKey({ type: "number" })
 ], User.prototype, "id", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => String),
-    (0, core_1.Property)({ type: "date" })
+    Property({ type: "date" })
 ], User.prototype, "createdAt", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => String),
-    (0, core_1.Property)({ type: "date", onUpdate: () => new Date() })
+    Property({ type: "date", onUpdate: () => new Date() })
 ], User.prototype, "updatedAt", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => String),
-    (0, core_1.Property)({ type: "text", unique: true })
+    Property({ type: "text", unique: true })
 ], User.prototype, "email", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => String),
-    (0, core_1.Property)({ type: "text", unique: true })
+    Property({ type: "text", unique: true })
 ], User.prototype, "username", void 0);
 __decorate([
-    (0, core_1.Property)({ type: "text" })
+    Property({ type: "text" })
 ], User.prototype, "password", void 0);
 User = __decorate([
     (0, type_graphql_1.ObjectType)(),
-    (0, core_1.Entity)()
+    (0, typeorm_1.Entity)()
 ], User);
 exports.User = User;
 //# sourceMappingURL=User.js.map

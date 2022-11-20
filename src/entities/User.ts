@@ -1,5 +1,5 @@
-import { Entity, OptionalProps, PrimaryKey, Property } from "@mikro-orm/core";
 import { Field, Int, ObjectType } from "type-graphql";
+import { Entity } from "typeorm";
 
 // so ngl this looks like a mongoose schema so thats good
 
@@ -8,8 +8,6 @@ import { Field, Int, ObjectType } from "type-graphql";
 @ObjectType()
 @Entity()
 export class User {
-  [OptionalProps]?: "updatedAt" | "createdAt";
-
   @Field(() => Int)
   @PrimaryKey({ type: "number" })
   id!: number;

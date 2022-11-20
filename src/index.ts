@@ -5,7 +5,6 @@ import express, { Application } from "express";
 import { MikroORM } from "@mikro-orm/core";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
-import { sendEmail } from "./utils/sendEmail";
 
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
@@ -23,18 +22,22 @@ import "dotenv/config";
 import "colors";
 import cors from "cors";
 
+import { DataSource } from "typeorm";
+
 const main = async () => {
-  sendEmail("wetooa@wetooa.com", "hello there");
+  const appDataSource = new DataSource({
+    type: "postgres",
+    database: "bafullstack2",
+    username: "postgres",
+    password: "postgres",
+    logging: true,
+    synchronize: true,
+    entities: [],
+  });
+
   const orm = await MikroORM.init(mikroOrmConfig);
   await orm.getMigrator().up();
   const fork = orm.em.fork({});
-
-  // const post = fork.create(Post, { title: "my first post" });
-  // await fork.persistAndFlush(post);
-  // await orm.em.nativeInsert(Post, { title: "my first post" });
-
-  // const posts = await fork.find(Post, {});
-  // console.log(posts);
 
   const app: Application = express();
   app.use(

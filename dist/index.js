@@ -17,7 +17,6 @@ const express_1 = __importDefault(require("express"));
 const core_1 = require("@mikro-orm/core");
 const apollo_server_express_1 = require("apollo-server-express");
 const type_graphql_1 = require("type-graphql");
-const sendEmail_1 = require("./utils/sendEmail");
 const hello_1 = require("./resolvers/hello");
 const post_1 = require("./resolvers/post");
 const user_1 = require("./resolvers/user");
@@ -30,8 +29,17 @@ require("reflect-metadata");
 require("dotenv/config");
 require("colors");
 const cors_1 = __importDefault(require("cors"));
+const typeorm_1 = require("typeorm");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
-    (0, sendEmail_1.sendEmail)("wetooa@wetooa.com", "hello there");
+    const appDataSource = new typeorm_1.DataSource({
+        type: "postgres",
+        database: "bafullstack2",
+        username: "postgres",
+        password: "postgres",
+        logging: true,
+        synchronize: true,
+        entities: [],
+    });
     const orm = yield core_1.MikroORM.init(mikro_orm_config_1.default);
     yield orm.getMigrator().up();
     const fork = orm.em.fork({});
