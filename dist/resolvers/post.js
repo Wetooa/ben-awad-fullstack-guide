@@ -22,65 +22,58 @@ exports.PostResolver = void 0;
 const Post_1 = require("../entities/Post");
 const type_graphql_1 = require("type-graphql");
 let PostResolver = class PostResolver {
-    posts({ em }) {
+    posts() {
         return __awaiter(this, void 0, void 0, function* () {
-            return em.find(Post_1.Post, {});
+            return Post_1.Post.find();
         });
     }
-    post(id, { em }) {
-        return em.findOne(Post_1.Post, { id });
+    post(id) {
+        return Post_1.Post.findOne({ where: { id } });
     }
-    createPost(title, { em }) {
+    createPost(title) {
         return __awaiter(this, void 0, void 0, function* () {
-            const post = em.create(Post_1.Post, { title });
-            yield em.persistAndFlush(post);
-            return post;
+            return Post_1.Post.create({ title }).save();
         });
     }
-    updatePost(id, title, { em }) {
+    updatePost(id, title) {
         return __awaiter(this, void 0, void 0, function* () {
-            const post = yield em.findOne(Post_1.Post, { id });
+            const post = yield Post_1.Post.findOne({ where: { id } });
             if (!post) {
                 return null;
             }
             if (typeof title !== "undefined") {
                 post.title = title;
-                yield em.persistAndFlush(post);
+                yield Post_1.Post.update({ id }, { title });
             }
             return post;
         });
     }
-    deletePost(id, { em }) {
+    deletePost(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            em.nativeDelete(Post_1.Post, { id });
+            yield Post_1.Post.delete({ id });
             return true;
         });
     }
 };
 __decorate([
-    (0, type_graphql_1.Query)(() => [Post_1.Post]),
-    __param(0, (0, type_graphql_1.Ctx)())
+    (0, type_graphql_1.Query)(() => [Post_1.Post])
 ], PostResolver.prototype, "posts", null);
 __decorate([
     (0, type_graphql_1.Query)(() => Post_1.Post, { nullable: true }),
-    __param(0, (0, type_graphql_1.Arg)("id", () => type_graphql_1.Int)),
-    __param(1, (0, type_graphql_1.Ctx)())
+    __param(0, (0, type_graphql_1.Arg)("id", () => type_graphql_1.Int))
 ], PostResolver.prototype, "post", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Post_1.Post),
-    __param(0, (0, type_graphql_1.Arg)("title", () => String)),
-    __param(1, (0, type_graphql_1.Ctx)())
+    __param(0, (0, type_graphql_1.Arg)("title", () => String))
 ], PostResolver.prototype, "createPost", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Post_1.Post, { nullable: true }),
     __param(0, (0, type_graphql_1.Arg)("id", () => type_graphql_1.Int)),
-    __param(1, (0, type_graphql_1.Arg)("title", () => String, { nullable: true })),
-    __param(2, (0, type_graphql_1.Ctx)())
+    __param(1, (0, type_graphql_1.Arg)("title", () => String, { nullable: true }))
 ], PostResolver.prototype, "updatePost", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Boolean),
-    __param(0, (0, type_graphql_1.Arg)("id", () => type_graphql_1.Int)),
-    __param(1, (0, type_graphql_1.Ctx)())
+    __param(0, (0, type_graphql_1.Arg)("id", () => type_graphql_1.Int))
 ], PostResolver.prototype, "deletePost", null);
 PostResolver = __decorate([
     (0, type_graphql_1.Resolver)()

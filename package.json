@@ -33,6 +33,7 @@
     "@mikro-orm/migrations": "^5.5.0",
     "@mikro-orm/postgresql": "^5.5.0",
     "@mikro-orm/reflection": "^5.5.0",
+    "@types/reflect-metadata": "^0.1.0",
     "apollo-server-express": "^3.10.4",
     "argon2": "^0.30.1",
     "colors": "^1.4.0",

@@ -68,7 +68,7 @@ UserResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], UserResponse);
 let UserResolver = class UserResolver {
-    changePassword(token, newPassword, reTypePassword, { redis, em, req }) {
+    changePassword(token, newPassword, reTypePassword, { redis, req }) {
         return __awaiter(this, void 0, void 0, function* () {
             if (newPassword.length <= 2) {
                 return {
@@ -102,7 +102,8 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
-            const user = yield em.findOne(User_1.User, { id: parseInt(userId) });
+            const id = parseInt(userId);
+            const user = yield User_1.User.findOne({ where: { id } });
             if (!user) {
                 return {
                     errors: [
@@ -113,16 +114,15 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
-            user.password = yield argon2_1.default.hash(newPassword);
-            yield em.persistAndFlush(user);
+            yield User_1.User.update({ id }, { password: yield argon2_1.default.hash(user.password) });
             yield redis.del(key);
             req.session.userId = user.id;
             return { user };
         });
     }
-    forgotPassword(email, { em, redis }) {
+    forgotPassword(email, { redis }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield em.findOne(User_1.User, { email });
+            const user = yield User_1.User.findOne({ where: { email } });
             if (!user) {
                 return false;
             }
@@ -132,38 +132,39 @@ let UserResolver = class UserResolver {
             return true;
         });
     }
-    me({ em, req }) {
+    me({ req }) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!req.session.userId) {
                 return null;
             }
-            const user = yield em.findOne(User_1.User, { id: req.session.userId });
+            const user = yield User_1.User.findOne({ where: { id: req.session.userId } });
             return user;
         });
     }
-    getAllUsers({ em }) {
+    getAllUsers() {
         return __awaiter(this, void 0, void 0, function* () {
-            const users = yield em.find(User_1.User, {});
+            const users = yield User_1.User.find();
             return users;
         });
     }
-    register(options, { req, em }) {
+    register(options, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
             const err = (0, validate_1.validate)(options);
             if (err.length >= 1)
                 return { errors: err };
             const hashedPassword = yield argon2_1.default.hash(options.password);
-            const user = em.create(User_1.User, {
-                username: options.username,
-                password: hashedPassword,
-                email: options.email,
-            });
+            let user;
             try {
-                yield em.persistAndFlush(user);
+                user = yield User_1.User.create({
+                    username: options.username,
+                    password: hashedPassword,
+                    email: options.email,
+                }).save();
             }
             catch (error) {
+                const duplicateRegex = /(?<=\()\w*(?=\)=\()/;
                 if (error.code === "23505") {
-                    let fieldWithError = error.detail.match(/(?<=\()\w*(?=\)=\()/)[0];
+                    let fieldWithError = error.detail.match(duplicateRegex)[0];
                     return {
                         errors: [
                             {
@@ -173,6 +174,7 @@ let UserResolver = class UserResolver {
                         ],
                     };
                 }
+                return {};
             }
             req.session.userId = user.id;
             return {
@@ -180,11 +182,9 @@ let UserResolver = class UserResolver {
             };
         });
     }
-    login(options, { em, req }) {
+    login(options, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield em.findOne(User_1.User, {
-                username: options.username,
-            });
+            const user = yield User_1.User.findOne({ where: { username: options.username } });
             if (!user) {
                 return {
                     errors: [
@@ -243,8 +243,7 @@ __decorate([
     __param(0, (0, type_graphql_1.Ctx)())
 ], UserResolver.prototype, "me", null);
 __decorate([
-    (0, type_graphql_1.Query)(() => [User_1.User]),
-    __param(0, (0, type_graphql_1.Ctx)())
+    (0, type_graphql_1.Query)(() => [User_1.User])
 ], UserResolver.prototype, "getAllUsers", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => UserResponse),

@@ -1,33 +1,38 @@
 import { Field, Int, ObjectType } from "type-graphql";
-import { Entity } from "typeorm";
-
-// so ngl this looks like a mongoose schema so thats good
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  BaseEntity,
+} from "typeorm";
 
 // adding @field makes it so that u can access the property
 
 @ObjectType()
 @Entity()
-export class User {
+export class User extends BaseEntity {
   @Field(() => Int)
-  @PrimaryKey({ type: "number" })
+  @PrimaryGeneratedColumn()
   id!: number;
 
   @Field(() => String)
-  @Property({ type: "date" })
+  @CreateDateColumn({ type: "date" })
   createdAt = new Date();
 
   @Field(() => String)
-  @Property({ type: "date", onUpdate: () => new Date() })
+  @UpdateDateColumn({ type: "date" })
   updatedAt = new Date();
 
   @Field(() => String)
-  @Property({ type: "text", unique: true })
+  @Column({ type: "text", unique: true })
   email!: string;
 
   @Field(() => String)
-  @Property({ type: "text", unique: true })
+  @Column({ type: "text", unique: true })
   username!: string;
 
-  @Property({ type: "text" })
+  @Column({ type: "text" })
   password!: string;
 }

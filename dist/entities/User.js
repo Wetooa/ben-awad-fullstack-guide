@@ -9,34 +9,35 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
-let User = class User {
+let User = class User extends typeorm_1.BaseEntity {
     constructor() {
+        super(...arguments);
         this.createdAt = new Date();
         this.updatedAt = new Date();
     }
 };
 __decorate([
     (0, type_graphql_1.Field)(() => type_graphql_1.Int),
-    PrimaryKey({ type: "number" })
+    (0, typeorm_1.PrimaryGeneratedColumn)()
 ], User.prototype, "id", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => String),
-    Property({ type: "date" })
+    (0, typeorm_1.CreateDateColumn)({ type: "date" })
 ], User.prototype, "createdAt", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => String),
-    Property({ type: "date", onUpdate: () => new Date() })
+    (0, typeorm_1.UpdateDateColumn)({ type: "date" })
 ], User.prototype, "updatedAt", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => String),
-    Property({ type: "text", unique: true })
+    (0, typeorm_1.Column)({ type: "text", unique: true })
 ], User.prototype, "email", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => String),
-    Property({ type: "text", unique: true })
+    (0, typeorm_1.Column)({ type: "text", unique: true })
 ], User.prototype, "username", void 0);
 __decorate([
-    Property({ type: "text" })
+    (0, typeorm_1.Column)({ type: "text" })
 ], User.prototype, "password", void 0);
 User = __decorate([
     (0, type_graphql_1.ObjectType)(),

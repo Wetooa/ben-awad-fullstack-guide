@@ -1,12 +1,9 @@
-// import { Post } from "./entities/Post";
+import "reflect-metadata";
 
-import mikroOrmConfig from "./mikro-orm.config";
 import express, { Application } from "express";
-import { MikroORM } from "@mikro-orm/core";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 
-import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 
@@ -17,27 +14,16 @@ import connectRedis from "connect-redis";
 import { COOKIE_NAME, __prod__ } from "./constants";
 import morgan from "morgan";
 
-import "reflect-metadata";
 import "dotenv/config";
 import "colors";
 import cors from "cors";
 
 import { DataSource } from "typeorm";
+import typeormConfig from "./typeorm.config";
 
 const main = async () => {
-  const appDataSource = new DataSource({
-    type: "postgres",
-    database: "bafullstack2",
-    username: "postgres",
-    password: "postgres",
-    logging: true,
-    synchronize: true,
-    entities: [],
-  });
-
-  const orm = await MikroORM.init(mikroOrmConfig);
-  await orm.getMigrator().up();
-  const fork = orm.em.fork({});
+  const appDataSource = new DataSource(typeormConfig);
+  appDataSource.initialize();
 
   const app: Application = express();
   app.use(
@@ -49,14 +35,6 @@ const main = async () => {
 
   let RedisStore = connectRedis(session);
   let redis: any = new Redis();
-
-  // for some reason this isn't needed anymore lol
-  // redis
-  //   .connect()
-  //   .then(() => console.log("[redis]: redis client connected".red.underline))
-  //   .catch((_: Error) => {
-  //     console.log("[redis]: redis client failed to conenct".bgRed.underline);
-  //   });
 
   app.set("trust proxy", !__prod__);
 
@@ -84,10 +62,10 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver, PostResolver, UserResolver],
+      resolvers: [PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => ({ em: fork, req, res, redis }),
+    context: ({ req, res }) => ({ req, res, redis }),
   });
   await apolloServer.start();
   apolloServer.applyMiddleware({
