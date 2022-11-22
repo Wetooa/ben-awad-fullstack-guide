@@ -62,6 +62,7 @@ export class PostResolver {
     @Ctx() { req }: MyContext
   ): Promise<PostResponse> {
     const errors: FieldError[] = [];
+    console.log(input);
 
     if (!input.title)
       errors.push({

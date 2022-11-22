@@ -30,9 +30,7 @@ __decorate([
     (0, typeorm_1.UpdateDateColumn)({ type: "date" })
 ], User.prototype, "updatedAt", void 0);
 __decorate([
-    (0, type_graphql_1.Field)(() => Post_1.Post),
-    (0, typeorm_1.Column)({ type: "text" }),
-    (0, typeorm_1.OneToMany)(() => Post_1.Post, (post) => post.creator, { nullable: true })
+    (0, typeorm_1.OneToMany)(() => Post_1.Post, (post) => post.creator)
 ], User.prototype, "posts", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => String),

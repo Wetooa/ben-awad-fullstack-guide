@@ -47,7 +47,7 @@ const NavBar: React.FC<NavBarProps> = ({}) => {
   }
 
   return (
-    <Box width={"100%"}>
+    <Box zIndex={1} position={"sticky"} top={0} width={"100%"}>
       <Flex
         gap={2}
         justifyContent={"flex-end"}

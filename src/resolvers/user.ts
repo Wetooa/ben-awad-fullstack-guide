@@ -191,6 +191,8 @@ export class UserResolver {
         password: hashedPassword,
         email: options.email,
       }).save();
+
+      console.log(user);
     } catch (error: any) {
       const duplicateRegex = /(?<=\()\w*(?=\)=\()/;
 

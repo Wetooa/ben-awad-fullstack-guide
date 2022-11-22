@@ -57,6 +57,7 @@ let PostResolver = class PostResolver {
     createPost(input, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = [];
+            console.log(input);
             if (!input.title)
                 errors.push({
                     field: "title",

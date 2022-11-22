@@ -160,6 +160,7 @@ let UserResolver = class UserResolver {
                     password: hashedPassword,
                     email: options.email,
                 }).save();
+                console.log(user);
             }
             catch (error) {
                 const duplicateRegex = /(?<=\()\w*(?=\)=\()/;

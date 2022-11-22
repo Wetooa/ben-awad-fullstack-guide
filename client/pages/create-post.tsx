@@ -21,6 +21,7 @@ const CreatePost: React.FC<CreatePostProps> = ({}) => {
         initialValues={{ title: "", text: "" }}
         onSubmit={async (values, { setErrors }) => {
           const response = await createPost({ input: values });
+          console.log(response);
 
           if (response.data?.createPost.errors) {
             setErrors(toErrorMap(response.data.createPost.errors));

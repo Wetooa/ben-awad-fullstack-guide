@@ -178,8 +178,7 @@ export const CreatePostDocument = gql`
     mutation CreatePost($input: PostInput!) {
   createPost(input: $input) {
     errors {
-      field
-      message
+      ...RegularError
     }
     post {
       id
@@ -193,7 +192,7 @@ export const CreatePostDocument = gql`
     }
   }
 }
-    `;
+    ${RegularErrorFragmentDoc}`;
 
 export function useCreatePostMutation() {
   return Urql.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument);

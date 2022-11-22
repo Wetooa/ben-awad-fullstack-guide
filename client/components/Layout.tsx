@@ -1,3 +1,4 @@
+import { Box } from "@chakra-ui/react";
 import React from "react";
 import NavBar from "./NavBar";
 import Wrapper, { WrapperVariant } from "./Wrapper";
@@ -8,10 +9,10 @@ interface LayoutProps extends WrapperVariant {
 
 const Layout: React.FC<LayoutProps> = ({ children, variant }) => {
   return (
-    <Wrapper variant={variant}>
+    <Box width={"100%"}>
       <NavBar />
-      {children}
-    </Wrapper>
+      <Wrapper variant={variant}>{children}</Wrapper>
+    </Box>
   );
 };
 export default Layout;

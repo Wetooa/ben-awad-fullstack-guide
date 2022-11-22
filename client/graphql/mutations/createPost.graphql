@@ -1,8 +1,7 @@
 mutation CreatePost($input: PostInput!) {
   createPost(input: $input) {
     errors {
-      field
-      message
+      ...RegularError
     }
     post {
       id
