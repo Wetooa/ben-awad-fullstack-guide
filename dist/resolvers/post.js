@@ -21,6 +21,30 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostResolver = void 0;
 const Post_1 = require("../entities/Post");
 const type_graphql_1 = require("type-graphql");
+const isAuth_1 = require("../middleware/isAuth");
+const user_1 = require("./user");
+let PostInput = class PostInput {
+};
+__decorate([
+    (0, type_graphql_1.Field)(() => String)
+], PostInput.prototype, "title", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => String)
+], PostInput.prototype, "text", void 0);
+PostInput = __decorate([
+    (0, type_graphql_1.InputType)()
+], PostInput);
+let PostResponse = class PostResponse {
+};
+__decorate([
+    (0, type_graphql_1.Field)(() => [user_1.FieldError], { nullable: true })
+], PostResponse.prototype, "errors", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => Post_1.Post, { nullable: true })
+], PostResponse.prototype, "post", void 0);
+PostResponse = __decorate([
+    (0, type_graphql_1.ObjectType)()
+], PostResponse);
 let PostResolver = class PostResolver {
     posts() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -30,9 +54,24 @@ let PostResolver = class PostResolver {
     post(id) {
         return Post_1.Post.findOne({ where: { id } });
     }
-    createPost(title) {
+    createPost(input, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return Post_1.Post.create({ title }).save();
+            const errors = [];
+            if (!input.title)
+                errors.push({
+                    field: "title",
+                    message: "Title field cannot be empty!",
+                });
+            if (!input.text)
+                errors.push({
+                    field: "text",
+                    message: "Text field cannot be empty!",
+                });
+            if (errors.length > 0)
+                return { errors };
+            return {
+                post: yield Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save(),
+            };
         });
     }
     updatePost(id, title) {
@@ -63,8 +102,10 @@ __decorate([
     __param(0, (0, type_graphql_1.Arg)("id", () => type_graphql_1.Int))
 ], PostResolver.prototype, "post", null);
 __decorate([
-    (0, type_graphql_1.Mutation)(() => Post_1.Post),
-    __param(0, (0, type_graphql_1.Arg)("title", () => String))
+    (0, type_graphql_1.Mutation)(() => PostResponse),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
+    __param(0, (0, type_graphql_1.Arg)("input", () => PostInput)),
+    __param(1, (0, type_graphql_1.Ctx)())
 ], PostResolver.prototype, "createPost", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Post_1.Post, { nullable: true }),

@@ -1,15 +1,47 @@
 import { Post } from "../entities/Post";
-import { Resolver, Query, Arg, Int, Mutation } from "type-graphql";
+import {
+  Resolver,
+  Query,
+  Arg,
+  Int,
+  Mutation,
+  InputType,
+  Field,
+  Ctx,
+  UseMiddleware,
+  ObjectType,
+} from "type-graphql";
+import { MyContext } from "src/types";
+import { isAuth } from "../middleware/isAuth";
+import { FieldError } from "./user";
 
 // ok so resolver is where we make our commands, kinda like the controllers
 // the queries are the individual controllers
-// the style is as follows
+// the syntax is as follows
 /*
 @Query(() => [TYPES])
 NAME(@Ctx() {CONTEXT_THINGY}: CONTEXT_TYPE_PROP): RETURN TYPE {
   return CONTEXT_THINGY.smthsmth()
 }
 */
+
+@InputType()
+class PostInput {
+  @Field(() => String)
+  title!: string;
+
+  @Field(() => String)
+  text!: string;
+}
+
+@ObjectType()
+class PostResponse {
+  @Field(() => [FieldError], { nullable: true })
+  errors?: FieldError[];
+
+  @Field(() => Post, { nullable: true })
+  post?: Post | Post[];
+}
 
 @Resolver()
 export class PostResolver {
@@ -23,9 +55,34 @@ export class PostResolver {
     return Post.findOne({ where: { id } });
   }
 
-  @Mutation(() => Post)
-  async createPost(@Arg("title", () => String) title: string): Promise<Post> {
-    return Post.create({ title }).save();
+  @Mutation(() => PostResponse)
+  @UseMiddleware(isAuth)
+  async createPost(
+    @Arg("input", () => PostInput) input: PostInput,
+    @Ctx() { req }: MyContext
+  ): Promise<PostResponse> {
+    const errors: FieldError[] = [];
+
+    if (!input.title)
+      errors.push({
+        field: "title",
+        message: "Title field cannot be empty!",
+      });
+
+    if (!input.text)
+      errors.push({
+        field: "text",
+        message: "Text field cannot be empty!",
+      });
+
+    if (errors.length > 0) return { errors };
+
+    return {
+      post: await Post.create({
+        ...input,
+        creatorId: req.session.userId,
+      }).save(),
+    };
   }
 
   @Mutation(() => Post, { nullable: true })
@@ -46,7 +103,7 @@ export class PostResolver {
   }
 
   @Mutation(() => Boolean)
-  async deletePost(@Arg("id", () => Int) id: number): Promise<Boolean> {
+  async deletePost(@Arg("id", () => Int) id: number): Promise<boolean> {
     await Post.delete({ id });
     return true;
   }

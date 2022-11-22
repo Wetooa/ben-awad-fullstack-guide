@@ -6,8 +6,7 @@
   "scripts": {
     "watch": "tsc -w",
     "server": "node dist/index.js",
-    "dev": "nodemon dist/index.js",
-    "create:migration": "npx mikro-orm migration:create"
+    "dev": "nodemon dist/index.js"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +20,7 @@
     "@types/morgan": "^1.9.3",
     "@types/node": "^18.11.7",
     "@types/nodemailer": "^6.4.6",
+    "@types/reflect-metadata": "^0.1.0",
     "@types/uuid": "^8.3.4",
     "concurrently": "^7.5.0",
     "nodemon": "^2.0.20",
@@ -28,12 +28,6 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
-    "@mikro-orm/cli": "^5.5.0",
-    "@mikro-orm/core": "^5.5.0",
-    "@mikro-orm/migrations": "^5.5.0",
-    "@mikro-orm/postgresql": "^5.5.0",
-    "@mikro-orm/reflection": "^5.5.0",
-    "@types/reflect-metadata": "^0.1.0",
     "apollo-server-express": "^3.10.4",
     "argon2": "^0.30.1",
     "colors": "^1.4.0",
@@ -52,12 +46,5 @@
     "type-graphql": "^1.1.1",
     "typeorm": "^0.3.10",
     "uuid": "^9.0.0"
-  },
-  "mikro-orm": {
-    "useTsNode": true,
-    "configPaths": [
-      "./src/mikro-orm.config.ts",
-      "./dist/mikro-orm.config.js"
-    ]
   }
 }

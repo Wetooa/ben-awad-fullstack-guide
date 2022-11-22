@@ -3,9 +3,9 @@ import { Formik, Form } from "formik";
 import { NextPage } from "next";
 import { withUrqlClient } from "next-urql";
 import router from "next/router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import InputField from "../../components/InputField";
-import Wrapper from "../../components/Wrapper";
+import Layout from "../../components/Layout";
 import { useChangePasswordMutation } from "../../generated/graphql";
 import { createUrqlClient } from "../../utils/createUrqlClient";
 import { toErrorMap } from "../../utils/toErrorMap";
@@ -27,7 +27,7 @@ const ChangePassword: NextPage<{ token: string }> = ({
   // }, [tokenError]);
 
   return (
-    <Wrapper>
+    <Layout variant="small">
       <Formik
         initialValues={{ newPassword: "", reTypePassword: "" }}
         onSubmit={async (values, { setErrors }) => {
@@ -93,7 +93,7 @@ const ChangePassword: NextPage<{ token: string }> = ({
           </Form>
         )}
       </Formik>
-    </Wrapper>
+    </Layout>
   );
 };
 

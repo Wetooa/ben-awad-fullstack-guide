@@ -6,7 +6,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   BaseEntity,
+  OneToMany,
 } from "typeorm";
+import { Post } from "./Post";
 
 // adding @field makes it so that u can access the property
 
@@ -24,6 +26,11 @@ export class User extends BaseEntity {
   @Field(() => String)
   @UpdateDateColumn({ type: "date" })
   updatedAt = new Date();
+
+  @Field(() => Post)
+  @Column({ type: "text" })
+  @OneToMany(() => Post, (post) => post.creator, { nullable: true })
+  posts!: Post[];
 
   @Field(() => String)
   @Column({ type: "text", unique: true })
