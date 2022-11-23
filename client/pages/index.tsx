@@ -3,6 +3,8 @@ import { withUrqlClient } from "next-urql";
 import { createUrqlClient } from "../utils/createUrqlClient";
 import { usePostsQuery } from "../generated/graphql";
 import Loading from "../components/Loading";
+import Layout from "../components/Layout";
+import { Link } from "@chakra-ui/react";
 
 // ssr results in the page loading before its sent to client so loading thingy doesnt show on the client
 
@@ -24,8 +26,8 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
           <Loading />
         </>
       ) : (
-        <>
-          <NavBar />
+        <Layout>
+          <Link href="/create-post">create post</Link>
           <div>hello world</div>
 
           <br />
@@ -38,7 +40,7 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
                   </div>
                 );
               })}
-        </>
+        </Layout>
       )}
     </>
   );

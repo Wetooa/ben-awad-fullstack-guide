@@ -27,7 +27,11 @@ const Login: React.FC<RegisterProps> = ({}) => {
           } else if (response.data?.login.user) {
             // worked
             setTimeout(() => {
-              router.push("/");
+              if (typeof router.query.next === "string") {
+                router.push(router.query.next);
+              } else {
+                router.push("/");
+              }
             }, 1000);
           }
         }}
@@ -70,23 +74,6 @@ const Login: React.FC<RegisterProps> = ({}) => {
                 Login
               </Button>
             </Box>
-
-            {/* <Button
-              isLoading={isSubmitting}
-              mt={4}
-              colorScheme="teal"
-              variant="solid"
-              onClick={() => {
-                const currTheme = localStorage.getItem("chakra-ui-color-mode");
-
-                localStorage.setItem(
-                  "chakra-ui-color-mode",
-                  currTheme === "light" ? "dark" : "light"
-                );
-              }}
-            >
-              Light/Dark
-            </Button> */}
           </Form>
         )}
       </Formik>

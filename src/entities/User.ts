@@ -27,7 +27,7 @@ export class User extends BaseEntity {
   @UpdateDateColumn({ type: "date" })
   updatedAt = new Date();
 
-  @OneToMany(() => Post, (post) => post.creator)
+  @OneToMany(() => Post, (post) => post.creator, { nullable: true })
   posts!: Post[];
 
   @Field(() => String)

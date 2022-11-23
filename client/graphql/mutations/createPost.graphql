@@ -9,7 +9,9 @@ mutation CreatePost($input: PostInput!) {
       text
       points
       creatorId
-      creator
+      creator {
+        ...FullUser
+      }
       createdAt
       updatedAt
     }

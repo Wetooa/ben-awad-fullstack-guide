@@ -8,12 +8,14 @@ import Layout from "../components/Layout";
 import { useCreatePostMutation } from "../generated/graphql";
 import { createUrqlClient } from "../utils/createUrqlClient";
 import { toErrorMap } from "../utils/toErrorMap";
+import { useIsAuth } from "../utils/useIsAuth";
 
 interface CreatePostProps {}
 
 const CreatePost: React.FC<CreatePostProps> = ({}) => {
   const [{}, createPost] = useCreatePostMutation();
   const router = useRouter();
+  useIsAuth();
 
   return (
     <Layout variant="small">
@@ -21,7 +23,6 @@ const CreatePost: React.FC<CreatePostProps> = ({}) => {
         initialValues={{ title: "", text: "" }}
         onSubmit={async (values, { setErrors }) => {
           const response = await createPost({ input: values });
-          console.log(response);
 
           if (response.data?.createPost.errors) {
             setErrors(toErrorMap(response.data.createPost.errors));

@@ -58,21 +58,22 @@ let PostResolver = class PostResolver {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = [];
             console.log(input);
-            if (!input.title)
+            if (input.title.length < 2) {
                 errors.push({
                     field: "title",
                     message: "Title field cannot be empty!",
                 });
-            if (!input.text)
+            }
+            if (input.text.length < 2) {
                 errors.push({
                     field: "text",
                     message: "Text field cannot be empty!",
                 });
+            }
             if (errors.length > 0)
                 return { errors };
-            return {
-                post: yield Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save(),
-            };
+            const post = yield Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save();
+            return { post };
         });
     }
     updatePost(id, title) {

@@ -20,12 +20,6 @@ const ChangePassword: NextPage<{ token: string }> = ({
   const [{}, changePassword] = useChangePasswordMutation();
   const [tokenError, setTokenError] = useState("");
 
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     setTokenError("");
-  //   }, 1000);
-  // }, [tokenError]);
-
   return (
     <Layout variant="small">
       <Formik
@@ -35,7 +29,6 @@ const ChangePassword: NextPage<{ token: string }> = ({
 
           if (response.data?.changePassword.errors) {
             const errorMap = toErrorMap(response.data.changePassword.errors);
-
             if ("token" in errorMap) {
               setTokenError(errorMap.token);
             }
@@ -96,6 +89,8 @@ const ChangePassword: NextPage<{ token: string }> = ({
     </Layout>
   );
 };
+
+// u can do this or that router thing we did at login for automatic rerouting
 
 ChangePassword.getInitialProps = ({ query }) => {
   return {

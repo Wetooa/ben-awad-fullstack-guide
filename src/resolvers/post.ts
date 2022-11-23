@@ -14,6 +14,7 @@ import {
 import { MyContext } from "src/types";
 import { isAuth } from "../middleware/isAuth";
 import { FieldError } from "./user";
+import { User } from "src/entities/User";
 
 // ok so resolver is where we make our commands, kinda like the controllers
 // the queries are the individual controllers
@@ -64,26 +65,28 @@ export class PostResolver {
     const errors: FieldError[] = [];
     console.log(input);
 
-    if (!input.title)
+    if (input.title.length < 2) {
       errors.push({
         field: "title",
         message: "Title field cannot be empty!",
       });
+    }
 
-    if (!input.text)
+    if (input.text.length < 2) {
       errors.push({
         field: "text",
         message: "Text field cannot be empty!",
       });
+    }
 
     if (errors.length > 0) return { errors };
 
-    return {
-      post: await Post.create({
-        ...input,
-        creatorId: req.session.userId,
-      }).save(),
-    };
+    const post = await Post.create({
+      ...input,
+      creatorId: req.session.userId,
+    }).save();
+
+    return { post };
   }
 
   @Mutation(() => Post, { nullable: true })

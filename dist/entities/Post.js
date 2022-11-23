@@ -38,6 +38,7 @@ __decorate([
     (0, typeorm_1.Column)({ type: "int" })
 ], Post.prototype, "creatorId", void 0);
 __decorate([
+    (0, type_graphql_1.Field)(() => User_1.User),
     (0, typeorm_1.ManyToOne)(() => User_1.User, (user) => user.posts)
 ], Post.prototype, "creator", void 0);
 __decorate([
