@@ -23,11 +23,11 @@ __decorate([
 ], User.prototype, "id", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => String),
-    (0, typeorm_1.CreateDateColumn)({ type: "date" })
+    (0, typeorm_1.CreateDateColumn)({ type: "timestamptz" })
 ], User.prototype, "createdAt", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => String),
-    (0, typeorm_1.UpdateDateColumn)({ type: "date" })
+    (0, typeorm_1.UpdateDateColumn)({ type: "timestamptz" })
 ], User.prototype, "updatedAt", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => Post_1.Post, (post) => post.creator, { nullable: true })

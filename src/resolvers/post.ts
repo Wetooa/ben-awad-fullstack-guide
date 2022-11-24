@@ -10,11 +10,13 @@ import {
   Ctx,
   UseMiddleware,
   ObjectType,
+  FieldResolver,
+  Root,
 } from "type-graphql";
 import { MyContext } from "src/types";
 import { isAuth } from "../middleware/isAuth";
 import { FieldError } from "./user";
-import { User } from "src/entities/User";
+import { appDataSource } from "../";
 
 // ok so resolver is where we make our commands, kinda like the controllers
 // the queries are the individual controllers
@@ -39,16 +41,42 @@ class PostInput {
 class PostResponse {
   @Field(() => [FieldError], { nullable: true })
   errors?: FieldError[];
-
-  @Field(() => Post, { nullable: true })
-  post?: Post | Post[];
 }
 
-@Resolver()
+// either limit and offset pagination or cursor based pagination
+@Resolver(Post)
 export class PostResolver {
+  @FieldResolver(() => String)
+  textSnippet(@Root() root: Post) {
+    return root.text.length >= 100
+      ? `${root.text.slice(0, 100)}...`
+      : root.text;
+  }
+
   @Query(() => [Post])
-  async posts(): Promise<Post[]> {
-    return Post.find();
+  async posts(
+    @Arg("limit", () => Int) limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null
+  ): Promise<Post[]> {
+    const userRepo = appDataSource.getRepository(Post);
+    const realLimit = Math.min(50, limit);
+
+    // docs says its better to use take instead of limit so we will use that lol
+
+    // cursor is like get the shit after that certain post
+
+    const qb = userRepo
+      .createQueryBuilder("p")
+      .orderBy('"createdAt"', "DESC")
+      .take(realLimit);
+
+    if (cursor) {
+      qb.where('"createdAt" <= :cursor', {
+        cursor: new Date(parseInt(cursor)),
+      });
+    }
+
+    return await qb.getMany();
   }
 
   @Query(() => Post, { nullable: true })
@@ -63,7 +91,6 @@ export class PostResolver {
     @Ctx() { req }: MyContext
   ): Promise<PostResponse> {
     const errors: FieldError[] = [];
-    console.log(input);
 
     if (input.title.length < 2) {
       errors.push({
@@ -81,12 +108,12 @@ export class PostResolver {
 
     if (errors.length > 0) return { errors };
 
-    const post = await Post.create({
+    await Post.create({
       ...input,
       creatorId: req.session.userId,
     }).save();
 
-    return { post };
+    return {};
   }
 
   @Mutation(() => Post, { nullable: true })

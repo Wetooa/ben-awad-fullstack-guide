@@ -1,3 +1,4 @@
+import path from "path";
 import { DataSourceOptions } from "typeorm";
 import { Post } from "./entities/Post";
 import { User } from "./entities/User";
@@ -10,4 +11,5 @@ export default {
   logging: true,
   synchronize: true,
   entities: [Post, User],
+  migrations: [path.join(__dirname, "./migrations/*")],
 } as DataSourceOptions;

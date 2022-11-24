@@ -40,10 +40,10 @@ export class Post extends BaseEntity {
   creator!: User;
 
   @Field(() => String)
-  @CreateDateColumn({ type: "date" })
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt = new Date();
 
   @Field(() => String)
-  @UpdateDateColumn({ type: "date" })
+  @UpdateDateColumn({ type: "timestamptz" })
   updatedAt = new Date();
 }

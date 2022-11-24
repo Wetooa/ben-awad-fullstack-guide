@@ -1,7 +1,0 @@
-fragment FullUser on User {
-  id
-  createdAt
-  updatedAt
-  email
-  username
-}

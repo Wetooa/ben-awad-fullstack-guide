@@ -3,17 +3,5 @@ mutation CreatePost($input: PostInput!) {
     errors {
       ...RegularError
     }
-    post {
-      id
-      title
-      text
-      points
-      creatorId
-      creator {
-        ...FullUser
-      }
-      createdAt
-      updatedAt
-    }
   }
 }

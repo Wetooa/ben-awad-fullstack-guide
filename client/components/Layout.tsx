@@ -11,7 +11,9 @@ const Layout: React.FC<LayoutProps> = ({ children, variant }) => {
   return (
     <Box width={"100%"}>
       <NavBar />
-      <Wrapper variant={variant}>{children}</Wrapper>
+      <Wrapper variant={variant}>
+        <Box mx="6">{children}</Box>
+      </Wrapper>
     </Box>
   );
 };

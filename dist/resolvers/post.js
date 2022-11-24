@@ -23,6 +23,7 @@ const Post_1 = require("../entities/Post");
 const type_graphql_1 = require("type-graphql");
 const isAuth_1 = require("../middleware/isAuth");
 const user_1 = require("./user");
+const __1 = require("../");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -39,16 +40,29 @@ let PostResponse = class PostResponse {
 __decorate([
     (0, type_graphql_1.Field)(() => [user_1.FieldError], { nullable: true })
 ], PostResponse.prototype, "errors", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(() => Post_1.Post, { nullable: true })
-], PostResponse.prototype, "post", void 0);
 PostResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], PostResponse);
 let PostResolver = class PostResolver {
-    posts() {
+    textSnippet(root) {
+        return root.text.length >= 100
+            ? `${root.text.slice(0, 100)}...`
+            : root.text;
+    }
+    posts(limit, cursor) {
         return __awaiter(this, void 0, void 0, function* () {
-            return Post_1.Post.find();
+            const userRepo = __1.appDataSource.getRepository(Post_1.Post);
+            const realLimit = Math.min(50, limit);
+            const qb = userRepo
+                .createQueryBuilder("p")
+                .orderBy('"createdAt"', "DESC")
+                .take(realLimit);
+            if (cursor) {
+                qb.where('"createdAt" <= :cursor', {
+                    cursor: new Date(parseInt(cursor)),
+                });
+            }
+            return yield qb.getMany();
         });
     }
     post(id) {
@@ -57,7 +71,6 @@ let PostResolver = class PostResolver {
     createPost(input, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = [];
-            console.log(input);
             if (input.title.length < 2) {
                 errors.push({
                     field: "title",
@@ -72,8 +85,8 @@ let PostResolver = class PostResolver {
             }
             if (errors.length > 0)
                 return { errors };
-            const post = yield Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save();
-            return { post };
+            yield Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save();
+            return {};
         });
     }
     updatePost(id, title) {
@@ -97,7 +110,13 @@ let PostResolver = class PostResolver {
     }
 };
 __decorate([
-    (0, type_graphql_1.Query)(() => [Post_1.Post])
+    (0, type_graphql_1.FieldResolver)(() => String),
+    __param(0, (0, type_graphql_1.Root)())
+], PostResolver.prototype, "textSnippet", null);
+__decorate([
+    (0, type_graphql_1.Query)(() => [Post_1.Post]),
+    __param(0, (0, type_graphql_1.Arg)("limit", () => type_graphql_1.Int)),
+    __param(1, (0, type_graphql_1.Arg)("cursor", () => String, { nullable: true }))
 ], PostResolver.prototype, "posts", null);
 __decorate([
     (0, type_graphql_1.Query)(() => Post_1.Post, { nullable: true }),
@@ -119,7 +138,7 @@ __decorate([
     __param(0, (0, type_graphql_1.Arg)("id", () => type_graphql_1.Int))
 ], PostResolver.prototype, "deletePost", null);
 PostResolver = __decorate([
-    (0, type_graphql_1.Resolver)()
+    (0, type_graphql_1.Resolver)(Post_1.Post)
 ], PostResolver);
 exports.PostResolver = PostResolver;
 //# sourceMappingURL=post.js.map

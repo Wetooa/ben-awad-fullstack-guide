@@ -20,11 +20,11 @@ export class User extends BaseEntity {
   id!: number;
 
   @Field(() => String)
-  @CreateDateColumn({ type: "date" })
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt = new Date();
 
   @Field(() => String)
-  @UpdateDateColumn({ type: "date" })
+  @UpdateDateColumn({ type: "timestamptz" })
   updatedAt = new Date();
 
   @OneToMany(() => Post, (post) => post.creator, { nullable: true })

@@ -43,11 +43,11 @@ __decorate([
 ], Post.prototype, "creator", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => String),
-    (0, typeorm_1.CreateDateColumn)({ type: "date" })
+    (0, typeorm_1.CreateDateColumn)({ type: "timestamptz" })
 ], Post.prototype, "createdAt", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => String),
-    (0, typeorm_1.UpdateDateColumn)({ type: "date" })
+    (0, typeorm_1.UpdateDateColumn)({ type: "timestamptz" })
 ], Post.prototype, "updatedAt", void 0);
 Post = __decorate([
     (0, type_graphql_1.ObjectType)(),

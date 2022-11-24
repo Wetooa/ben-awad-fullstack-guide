@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.appDataSource = void 0;
 require("reflect-metadata");
 const express_1 = __importDefault(require("express"));
 const apollo_server_express_1 = require("apollo-server-express");
@@ -28,9 +29,10 @@ require("colors");
 const cors_1 = __importDefault(require("cors"));
 const typeorm_1 = require("typeorm");
 const typeorm_config_1 = __importDefault(require("./typeorm.config"));
+exports.appDataSource = new typeorm_1.DataSource(typeorm_config_1.default);
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
-    const appDataSource = new typeorm_1.DataSource(typeorm_config_1.default);
-    appDataSource.initialize();
+    yield exports.appDataSource.initialize();
+    yield exports.appDataSource.runMigrations();
     const app = (0, express_1.default)();
     app.use((0, cors_1.default)({
         origin: ["http://localhost:3000", "https://studio.apollographql.com"],
@@ -48,8 +50,8 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         cookie: {
             maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
             httpOnly: false,
-            secure: false,
-            sameSite: "lax",
+            secure: true,
+            sameSite: "none",
         },
         secret: "envlater",
         resave: false,

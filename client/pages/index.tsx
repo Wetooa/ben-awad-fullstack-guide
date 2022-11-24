@@ -1,10 +1,17 @@
-import NavBar from "../components/NavBar";
 import { withUrqlClient } from "next-urql";
 import { createUrqlClient } from "../utils/createUrqlClient";
 import { usePostsQuery } from "../generated/graphql";
 import Loading from "../components/Loading";
 import Layout from "../components/Layout";
-import { Link } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  Link,
+  Stack,
+  Text,
+} from "@chakra-ui/react";
 
 // ssr results in the page loading before its sent to client so loading thingy doesnt show on the client
 
@@ -16,30 +23,59 @@ import { Link } from "@chakra-ui/react";
 // no need to ssr everything. only ssr dynamic pages which need server requests while static pages such as login forms can be left with no ssr
 
 export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
-  const [{ data, fetching }] = usePostsQuery();
+  const [{ data, fetching }] = usePostsQuery({
+    variables: {
+      limit: 10,
+      cursor: "",
+    },
+  });
+
+  if (!fetching && !data) {
+    return <div className="">you got query failed for some reason</div>;
+  }
 
   return (
     <>
-      {fetching ? (
+      {!data && fetching ? (
         <>
-          <div className="">Loading</div>
+          <div className="">...loading</div>
           <Loading />
         </>
       ) : (
         <Layout>
-          <Link href="/create-post">create post</Link>
-          <div>hello world</div>
+          <Flex align="center">
+            <Heading>REDDIT CLONE</Heading>
+            <Link ml={"auto"} href="/create-post">
+              create post
+            </Link>
+          </Flex>
 
           <br />
-          {!data
-            ? null
-            : data.posts.map((p) => {
+          <br />
+
+          {!data ? null : (
+            <Stack spacing={8}>
+              {data.posts.map((p) => {
                 return (
-                  <div className="" key={p.id}>
-                    {p.title}
-                  </div>
+                  <Box
+                    key={p.id}
+                    p={5}
+                    shadow="lg"
+                    borderWidth="1px"
+                    rounded={5}
+                  >
+                    <Heading fontSize="xl">{p.title}</Heading>
+                    <Text mt={3}>{p.textSnippet}</Text>
+                  </Box>
                 );
               })}
+              <Flex>
+                <Button isLoading={fetching} m="auto" my={4}>
+                  load more
+                </Button>
+              </Flex>
+            </Stack>
+          )}
         </Layout>
       )}
     </>
