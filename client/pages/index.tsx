@@ -1,6 +1,5 @@
 import { withUrqlClient } from "next-urql";
 import { createUrqlClient } from "../utils/createUrqlClient";
-import { usePostsQuery } from "../generated/graphql";
 import Loading from "../components/Loading";
 import Layout from "../components/Layout";
 import {
@@ -12,6 +11,8 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
+import { useState } from "react";
+import { usePostsQuery } from "../generated/graphql";
 
 // ssr results in the page loading before its sent to client so loading thingy doesnt show on the client
 
@@ -23,12 +24,13 @@ import {
 // no need to ssr everything. only ssr dynamic pages which need server requests while static pages such as login forms can be left with no ssr
 
 export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
-  const [{ data, fetching }] = usePostsQuery({
-    variables: {
-      limit: 10,
-      cursor: "",
-    },
+  // we can cast useStates this way
+  const [variables, setVariables] = useState({
+    limit: 10,
+    cursor: "",
   });
+
+  const [{ data, fetching }] = usePostsQuery({ variables });
 
   if (!fetching && !data) {
     return <div className="">you got query failed for some reason</div>;
@@ -55,7 +57,7 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
 
           {!data ? null : (
             <Stack spacing={8}>
-              {data.posts.map((p) => {
+              {data!.posts.posts!.map((p) => {
                 return (
                   <Box
                     key={p.id}
@@ -69,11 +71,26 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
                   </Box>
                 );
               })}
-              <Flex>
-                <Button isLoading={fetching} m="auto" my={4}>
-                  load more
-                </Button>
-              </Flex>
+              {data && data.posts.hasMore && (
+                <Flex>
+                  <Button
+                    isLoading={fetching}
+                    m="auto"
+                    my={4}
+                    onClick={() =>
+                      setVariables({
+                        limit: variables.limit,
+                        // basically we get the last thing in out current cached data then get the ones after it gets???
+                        cursor:
+                          data.posts.posts![data.posts.posts!.length - 1]
+                            .createdAt,
+                      })
+                    }
+                  >
+                    load more
+                  </Button>
+                </Flex>
+              )}
             </Stack>
           )}
         </Layout>

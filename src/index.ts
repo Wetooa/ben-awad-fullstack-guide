@@ -25,7 +25,7 @@ export const appDataSource = new DataSource(typeormConfig);
 
 const main = async () => {
   await appDataSource.initialize();
-  await appDataSource.runMigrations();
+  await appDataSource.runMigrations({ transaction: "all" });
 
   const app: Application = express();
   app.use(

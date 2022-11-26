@@ -6,7 +6,8 @@
   "scripts": {
     "watch": "tsc -w",
     "server": "node dist/index.js",
-    "dev": "nodemon dist/index.js"
+    "dev": "nodemon dist/index.js",
+    "migrations:create": "npx typeorm migration:create ./src/MockPosts"
   },
   "keywords": [],
   "author": "",

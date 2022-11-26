@@ -14,6 +14,6 @@ exports.default = {
     logging: true,
     synchronize: true,
     entities: [Post_1.Post, User_1.User],
-    migrations: [path_1.default.join(__dirname, "./migrations/*")],
+    migrations: [path_1.default.join(__dirname, "./migrations/**/*")],
 };
 //# sourceMappingURL=typeorm.config.js.map

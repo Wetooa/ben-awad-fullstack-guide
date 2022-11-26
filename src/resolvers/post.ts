@@ -43,6 +43,15 @@ class PostResponse {
   errors?: FieldError[];
 }
 
+@ObjectType()
+class PaginatedPosts {
+  @Field(() => [Post])
+  posts?: Post[];
+
+  @Field(() => Boolean)
+  hasMore!: boolean;
+}
+
 // either limit and offset pagination or cursor based pagination
 @Resolver(Post)
 export class PostResolver {
@@ -53,13 +62,14 @@ export class PostResolver {
       : root.text;
   }
 
-  @Query(() => [Post])
+  @Query(() => PaginatedPosts)
   async posts(
     @Arg("limit", () => Int) limit: number,
-    @Arg("cursor", () => String, { nullable: true }) cursor: string | null
-  ): Promise<Post[]> {
-    const userRepo = appDataSource.getRepository(Post);
+    @Arg("cursor", () => String) cursor: string
+  ): Promise<PaginatedPosts> {
+    const userRepo = await appDataSource.getRepository(Post);
     const realLimit = Math.min(50, limit);
+    const realLimitPlusOne = realLimit + 1;
 
     // docs says its better to use take instead of limit so we will use that lol
 
@@ -68,15 +78,20 @@ export class PostResolver {
     const qb = userRepo
       .createQueryBuilder("p")
       .orderBy('"createdAt"', "DESC")
-      .take(realLimit);
+      .take(realLimitPlusOne);
 
     if (cursor) {
-      qb.where('"createdAt" <= :cursor', {
+      qb.where('"createdAt" < :cursor', {
         cursor: new Date(parseInt(cursor)),
       });
     }
 
-    return await qb.getMany();
+    const posts = await qb.getMany();
+
+    return {
+      posts: posts.slice(0, realLimit),
+      hasMore: posts.length === realLimitPlusOne,
+    };
   }
 
   @Query(() => Post, { nullable: true })

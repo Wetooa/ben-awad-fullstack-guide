@@ -32,7 +32,7 @@ const typeorm_config_1 = __importDefault(require("./typeorm.config"));
 exports.appDataSource = new typeorm_1.DataSource(typeorm_config_1.default);
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     yield exports.appDataSource.initialize();
-    yield exports.appDataSource.runMigrations();
+    yield exports.appDataSource.runMigrations({ transaction: "all" });
     const app = (0, express_1.default)();
     app.use((0, cors_1.default)({
         origin: ["http://localhost:3000", "https://studio.apollographql.com"],
