@@ -250,6 +250,15 @@ export const PostsDocument = gql`
       id
       title
       text
+      points
+      creatorId
+      creator {
+        id
+        createdAt
+        updatedAt
+        email
+        username
+      }
       createdAt
       updatedAt
       textSnippet
@@ -322,4 +331,4 @@ export type PostsQueryVariables = Exact<{
 }>;
 
 
-export type PostsQuery = { __typename?: 'Query', posts: { __typename?: 'PaginatedPosts', hasMore: boolean, posts: Array<{ __typename?: 'Post', id: number, title: string, text: string, createdAt: string, updatedAt: string, textSnippet: string }> } };
+export type PostsQuery = { __typename?: 'Query', posts: { __typename?: 'PaginatedPosts', hasMore: boolean, posts: Array<{ __typename?: 'Post', id: number, title: string, text: string, points: number, creatorId: number, createdAt: string, updatedAt: string, textSnippet: string, creator: { __typename?: 'User', id: number, createdAt: string, updatedAt: string, email: string, username: string } }> } };

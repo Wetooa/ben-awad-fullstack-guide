@@ -30,7 +30,9 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
     cursor: "",
   });
 
-  const [{ data, fetching }] = usePostsQuery({ variables });
+  const [{ data, fetching, stale }] = usePostsQuery({
+    variables,
+  });
 
   if (!fetching && !data) {
     return <div className="">you got query failed for some reason</div>;
@@ -57,7 +59,7 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
 
           {!data ? null : (
             <Stack spacing={8}>
-              {data!.posts.posts!.map((p) => {
+              {data.posts.posts.map((p) => {
                 return (
                   <Box
                     key={p.id}
@@ -67,14 +69,15 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
                     rounded={5}
                   >
                     <Heading fontSize="xl">{p.title}</Heading>
+                    <Text>{p.creator.username}</Text>
                     <Text mt={3}>{p.textSnippet}</Text>
                   </Box>
                 );
               })}
-              {data && data.posts.hasMore && (
+              {data.posts.hasMore && (
                 <Flex>
                   <Button
-                    isLoading={fetching}
+                    isLoading={stale}
                     m="auto"
                     my={4}
                     onClick={() =>
@@ -82,13 +85,14 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
                         limit: variables.limit,
                         // basically we get the last thing in out current cached data then get the ones after it gets???
                         cursor:
-                          data.posts.posts![data.posts.posts!.length - 1]
+                          data.posts.posts[data.posts.posts.length - 1]
                             .createdAt,
                       })
                     }
                   >
                     load more
                   </Button>
+                  <br />
                 </Flex>
               )}
             </Stack>

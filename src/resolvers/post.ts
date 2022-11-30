@@ -12,8 +12,9 @@ import {
   ObjectType,
   FieldResolver,
   Root,
+  Info,
 } from "type-graphql";
-import { MyContext } from "src/types";
+import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
 import { FieldError } from "./user";
 import { appDataSource } from "../";
@@ -46,7 +47,7 @@ class PostResponse {
 @ObjectType()
 class PaginatedPosts {
   @Field(() => [Post])
-  posts?: Post[];
+  posts!: Post[];
 
   @Field(() => Boolean)
   hasMore!: boolean;
@@ -75,18 +76,43 @@ export class PostResolver {
 
     // cursor is like get the shit after that certain post
 
-    const qb = userRepo
-      .createQueryBuilder("p")
-      .orderBy('"createdAt"', "DESC")
-      .take(realLimitPlusOne);
+    const replacements: any[] = [realLimitPlusOne];
+    if (cursor) replacements.push(new Date(parseInt(cursor)));
 
-    if (cursor) {
-      qb.where('"createdAt" < :cursor', {
-        cursor: new Date(parseInt(cursor)),
-      });
-    }
+    // query is kinda like mysql so yea it feels good what I learned didnt go to waste hahahahha
+    const posts = await userRepo.query(
+      `
+      SELECT p.*,
+      JSON_BUILD_OBJECT(
+        'id', u.id,
+        'username', u.username,
+        'email', u.email,
+        'createdAt', u."createdAt",
+        'updatedAt', u."updatedAt"
+        ) creator
+      FROM post p
+      INNER JOIN public.user u
+      ON u.id = p."creatorId"
+      ${cursor && `WHERE p."createdAt" < $2`}
+      ORDER BY p."createdAt" DESC
+      LIMIT $1
+    `,
+      replacements
+    );
 
-    const posts = await qb.getMany();
+    // const qb = userRepo
+    //   .createQueryBuilder("p")
+    //   .innerJoinAndSelect("p.creator", "u", 'u.id = :p."creatorId"')
+    //   .orderBy('p."createdAt"', "DESC")
+    //   .take(realLimitPlusOne);
+
+    // if (cursor) {
+    //   qb.where('p."createdAt" < :cursor', {
+    //     cursor: new Date(parseInt(cursor)),
+    //   });
+    // }
+
+    console.log(posts);
 
     return {
       posts: posts.slice(0, realLimit),
