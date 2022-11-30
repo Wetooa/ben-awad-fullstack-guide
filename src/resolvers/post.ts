@@ -12,12 +12,12 @@ import {
   ObjectType,
   FieldResolver,
   Root,
-  Info,
 } from "type-graphql";
 import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
 import { FieldError } from "./user";
 import { appDataSource } from "../";
+import { Updoot } from "../entities/Updoot";
 
 // ok so resolver is where we make our commands, kinda like the controllers
 // the queries are the individual controllers
@@ -177,6 +177,80 @@ export class PostResolver {
   @Mutation(() => Boolean)
   async deletePost(@Arg("id", () => Int) id: number): Promise<boolean> {
     await Post.delete({ id });
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async vote(
+    @Arg("postId", () => Int) postId: number,
+    @Arg("value", () => Int) value: number,
+    @Ctx() { req }: MyContext
+  ) {
+    const postRepo = appDataSource.getRepository(Post);
+
+    const isUpdoot = value !== -1;
+    const realValue = isUpdoot ? 1 : -1;
+    const { userId } = req.session;
+
+    const updoot = await Updoot.findOne({ where: { userId, postId } });
+
+    if (updoot) {
+      if (updoot.value === realValue) {
+        await postRepo.query(
+          `
+          UPDATE post
+          SET points = points - $1
+          WHERE id = $2
+          `,
+          [realValue, postId]
+        );
+
+        await appDataSource.getRepository(Updoot).query(
+          `
+            DELETE FROM updoot u
+            WHERE u."userId" = $1
+            AND u."postId" = $2
+            `,
+          [userId, postId]
+        );
+      } else {
+        await postRepo.query(
+          `
+          UPDATE post
+          SET points = points + $1
+          WHERE id = $2
+          `,
+          [realValue * 2, postId]
+        );
+
+        await appDataSource.getRepository(Updoot).query(
+          `
+            UPDATE updoot
+            SET value = $3
+            WHERE "userId" = $1
+            AND "postId" = $2
+            `,
+          [userId, postId, realValue]
+        );
+      }
+    } else {
+      await Updoot.insert({
+        userId,
+        postId,
+        value: realValue,
+      });
+
+      await postRepo.query(
+        `
+        UPDATE post p
+        SET points = points + $1
+        WHERE id = $2
+        `,
+        [realValue, postId]
+      );
+    }
+
     return true;
   }
 }

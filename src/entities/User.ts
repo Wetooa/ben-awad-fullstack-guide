@@ -9,6 +9,7 @@ import {
   OneToMany,
 } from "typeorm";
 import { Post } from "./Post";
+import { Updoot } from "./Updoot";
 
 // adding @field makes it so that u can access the property
 
@@ -40,4 +41,7 @@ export class User extends BaseEntity {
 
   @Column({ type: "text" })
   password!: string;
+
+  @OneToMany(() => Updoot, (updoot) => updoot.user)
+  updoots!: Updoot[];
 }

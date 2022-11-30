@@ -5,9 +5,11 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { Updoot } from "./Updoot";
 import { User } from "./User";
 
 // so ngl this looks like a mongoose schema so thats good
@@ -46,4 +48,7 @@ export class Post extends BaseEntity {
   @Field(() => String)
   @UpdateDateColumn({ type: "timestamptz" })
   updatedAt = new Date();
+
+  @OneToMany(() => Updoot, (updoot) => updoot.post)
+  updoots!: Updoot[];
 }
