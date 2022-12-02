@@ -71,7 +71,7 @@ let PostResolver = class PostResolver {
     }
     posts(limit, cursor) {
         return __awaiter(this, void 0, void 0, function* () {
-            const userRepo = yield __1.appDataSource.getRepository(Post_1.Post);
+            const userRepo = __1.appDataSource.getRepository(Post_1.Post);
             const realLimit = Math.min(50, limit);
             const realLimitPlusOne = realLimit + 1;
             const replacements = [realLimitPlusOne];
@@ -93,7 +93,6 @@ let PostResolver = class PostResolver {
       ORDER BY p."createdAt" DESC
       LIMIT $1
     `, replacements);
-            console.log(posts);
             return {
                 posts: posts.slice(0, realLimit),
                 hasMore: posts.length === realLimitPlusOne,
@@ -146,6 +145,7 @@ let PostResolver = class PostResolver {
     vote(postId, value, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
             const postRepo = __1.appDataSource.getRepository(Post_1.Post);
+            const updootRepo = __1.appDataSource.getRepository(Updoot_1.Updoot);
             const isUpdoot = value !== -1;
             const realValue = isUpdoot ? 1 : -1;
             const { userId } = req.session;
@@ -157,7 +157,7 @@ let PostResolver = class PostResolver {
           SET points = points - $1
           WHERE id = $2
           `, [realValue, postId]);
-                    yield __1.appDataSource.getRepository(Updoot_1.Updoot).query(`
+                    yield updootRepo.query(`
             DELETE FROM updoot u
             WHERE u."userId" = $1
             AND u."postId" = $2
@@ -169,7 +169,7 @@ let PostResolver = class PostResolver {
           SET points = points + $1
           WHERE id = $2
           `, [realValue * 2, postId]);
-                    yield __1.appDataSource.getRepository(Updoot_1.Updoot).query(`
+                    yield updootRepo.query(`
             UPDATE updoot
             SET value = $3
             WHERE "userId" = $1
@@ -178,16 +178,18 @@ let PostResolver = class PostResolver {
                 }
             }
             else {
-                yield Updoot_1.Updoot.insert({
-                    userId,
-                    postId,
-                    value: realValue,
-                });
-                yield postRepo.query(`
-        UPDATE post p
-        SET points = points + $1
-        WHERE id = $2
-        `, [realValue, postId]);
+                yield __1.appDataSource.query(`
+        START TRANSACTION;
+
+        INSERT INTO updoot ("userId", "postId", value)
+        VALUES (${userId}, ${postId}, ${realValue});
+
+        UPDATE post
+        SET points = points + ${realValue}
+        WHERE id = ${postId};
+
+        COMMIT;
+        `);
             }
             return true;
         });

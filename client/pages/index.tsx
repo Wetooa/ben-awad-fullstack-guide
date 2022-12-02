@@ -26,7 +26,7 @@ import { usePostsQuery } from "../generated/graphql";
 export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
   // we can cast useStates this way
   const [variables, setVariables] = useState({
-    limit: 10,
+    limit: 15,
     cursor: "",
   });
 
@@ -68,8 +68,10 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
                     borderWidth="1px"
                     rounded={5}
                   >
-                    <Heading fontSize="xl">{p.title}</Heading>
-                    <Text>{p.creator.username}</Text>
+                    <Flex justifyContent={"space-between"} marginRight={4}>
+                      <Heading fontSize="xl">{p.title}</Heading>
+                      <Text>Posted by: {p.creator.username}</Text>
+                    </Flex>
                     <Text mt={3}>{p.textSnippet}</Text>
                   </Box>
                 );

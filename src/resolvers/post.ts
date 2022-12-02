@@ -68,7 +68,7 @@ export class PostResolver {
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String) cursor: string
   ): Promise<PaginatedPosts> {
-    const userRepo = await appDataSource.getRepository(Post);
+    const userRepo = appDataSource.getRepository(Post);
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
 
@@ -111,8 +111,6 @@ export class PostResolver {
     //     cursor: new Date(parseInt(cursor)),
     //   });
     // }
-
-    console.log(posts);
 
     return {
       posts: posts.slice(0, realLimit),
@@ -188,6 +186,7 @@ export class PostResolver {
     @Ctx() { req }: MyContext
   ) {
     const postRepo = appDataSource.getRepository(Post);
+    const updootRepo = appDataSource.getRepository(Updoot);
 
     const isUpdoot = value !== -1;
     const realValue = isUpdoot ? 1 : -1;
@@ -206,7 +205,7 @@ export class PostResolver {
           [realValue, postId]
         );
 
-        await appDataSource.getRepository(Updoot).query(
+        await updootRepo.query(
           `
             DELETE FROM updoot u
             WHERE u."userId" = $1
@@ -224,7 +223,7 @@ export class PostResolver {
           [realValue * 2, postId]
         );
 
-        await appDataSource.getRepository(Updoot).query(
+        await updootRepo.query(
           `
             UPDATE updoot
             SET value = $3
@@ -235,19 +234,25 @@ export class PostResolver {
         );
       }
     } else {
-      await Updoot.insert({
-        userId,
-        postId,
-        value: realValue,
-      });
+      // await Updoot.insert({
+      //   userId,
+      //   postId,
+      //   value: realValue,
+      // });
 
-      await postRepo.query(
+      await appDataSource.query(
         `
-        UPDATE post p
-        SET points = points + $1
-        WHERE id = $2
-        `,
-        [realValue, postId]
+        START TRANSACTION;
+
+        INSERT INTO updoot ("userId", "postId", value)
+        VALUES (${userId}, ${postId}, ${realValue});
+
+        UPDATE post
+        SET points = points + ${realValue}
+        WHERE id = ${postId};
+
+        COMMIT;
+        `
       );
     }
 
