@@ -152,26 +152,30 @@ export const createUrqlClient = (ssrExchange: any) => ({
         // i have no idea what this all means btw hahahah
 
         Mutation: {
-          createPost: (_result, args, cache, info) => {
-            cache.invalidate("Query", "posts", {
-              variables: {
-                limit: 15,
-                cursor: "",
-              },
+          createPost: (_result, _args, cache, _info) => {
+            // the big idea why we do this is becuz we added our new psot on top, but it might mean that a new post arrived earlier and we just didnt reload it so we like say hey there might be new ones so invalidate all the posts saved in the cache when we make a post gets g???
+
+            const allFields = cache.inspectFields("Query");
+            const fieldInfos = allFields.filter(
+              (info) => info.fieldName === "posts"
+            );
+
+            fieldInfos.forEach((fi) => {
+              cache.invalidate("Query", "posts");
             });
           },
 
-          logout: (_result, args, cache, info) => {
+          logout: (_result, _args, cache, _info) => {
             // me query
             betterUpdateQuery<LogoutMutation, MeQuery>(
               cache,
               { query: MeDocument },
               _result,
-              (result, query) => ({ me: null })
+              (_result, _query) => ({ me: null })
             );
           },
 
-          login: (_result, args, cache, info) => {
+          login: (_result, _args, cache, _info) => {
             betterUpdateQuery<LoginMutation, MeQuery>(
               cache,
               { query: MeDocument },
@@ -184,7 +188,7 @@ export const createUrqlClient = (ssrExchange: any) => ({
             );
           },
 
-          register: (_result, args, cache, info) => {
+          register: (_result, _args, cache, _info) => {
             betterUpdateQuery<RegisterMutation, MeQuery>(
               cache,
               { query: MeDocument },

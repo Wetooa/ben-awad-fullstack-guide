@@ -144,52 +144,53 @@ let PostResolver = class PostResolver {
     }
     vote(postId, value, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const postRepo = __1.appDataSource.getRepository(Post_1.Post);
-            const updootRepo = __1.appDataSource.getRepository(Updoot_1.Updoot);
             const isUpdoot = value !== -1;
             const realValue = isUpdoot ? 1 : -1;
             const { userId } = req.session;
             const updoot = yield Updoot_1.Updoot.findOne({ where: { userId, postId } });
             if (updoot) {
                 if (updoot.value === realValue) {
-                    yield postRepo.query(`
-          UPDATE post
-          SET points = points - $1
-          WHERE id = $2
+                    yield __1.appDataSource.transaction((tm) => __awaiter(this, void 0, void 0, function* () {
+                        yield tm.query(`
+            UPDATE post
+            SET points = points - $1
+            WHERE id = $2
           `, [realValue, postId]);
-                    yield updootRepo.query(`
+                        yield tm.query(`
             DELETE FROM updoot u
             WHERE u."userId" = $1
             AND u."postId" = $2
-            `, [userId, postId]);
+          `, [userId, postId]);
+                    }));
                 }
                 else {
-                    yield postRepo.query(`
-          UPDATE post
-          SET points = points + $1
-          WHERE id = $2
+                    yield __1.appDataSource.transaction((tm) => __awaiter(this, void 0, void 0, function* () {
+                        yield tm.query(`
+            UPDATE post
+            SET points = points + $1
+            WHERE id = $2
           `, [realValue * 2, postId]);
-                    yield updootRepo.query(`
+                        yield tm.query(`
             UPDATE updoot
-            SET value = $3
-            WHERE "userId" = $1
-            AND "postId" = $2
-            `, [userId, postId, realValue]);
+            SET value = $1
+            WHERE "userId" = $2
+            AND "postId" = $3
+          `, [realValue, userId, postId]);
+                    }));
                 }
             }
             else {
-                yield __1.appDataSource.query(`
-        START TRANSACTION;
-
-        INSERT INTO updoot ("userId", "postId", value)
-        VALUES (${userId}, ${postId}, ${realValue});
-
-        UPDATE post
-        SET points = points + ${realValue}
-        WHERE id = ${postId};
-
-        COMMIT;
-        `);
+                yield __1.appDataSource.transaction((tm) => __awaiter(this, void 0, void 0, function* () {
+                    yield tm.query(`
+          INSERT INTO updoot ("userId", "postId", value)
+          VALUES ($1, $2, $3)
+        `, [userId, postId, realValue]);
+                    yield tm.query(`
+          UPDATE post
+          SET points = points + $1
+          WHERE id = $2
+        `, [realValue, postId]);
+                }));
             }
             return true;
         });

@@ -185,9 +185,6 @@ export class PostResolver {
     @Arg("value", () => Int) value: number,
     @Ctx() { req }: MyContext
   ) {
-    const postRepo = appDataSource.getRepository(Post);
-    const updootRepo = appDataSource.getRepository(Updoot);
-
     const isUpdoot = value !== -1;
     const realValue = isUpdoot ? 1 : -1;
     const { userId } = req.session;
@@ -196,64 +193,71 @@ export class PostResolver {
 
     if (updoot) {
       if (updoot.value === realValue) {
-        await postRepo.query(
-          `
-          UPDATE post
-          SET points = points - $1
-          WHERE id = $2
+        // if equal to the current value, remove the doot
+        await appDataSource.transaction(async (tm) => {
+          await tm.query(
+            `
+            UPDATE post
+            SET points = points - $1
+            WHERE id = $2
           `,
-          [realValue, postId]
-        );
+            [realValue, postId]
+          );
 
-        await updootRepo.query(
-          `
+          await tm.query(
+            `
             DELETE FROM updoot u
             WHERE u."userId" = $1
             AND u."postId" = $2
-            `,
-          [userId, postId]
-        );
+          `,
+            [userId, postId]
+          );
+        });
       } else {
-        await postRepo.query(
+        // if not equal to the current value, then update the doot and add the value twice g?
+
+        await appDataSource.transaction(async (tm) => {
+          await tm.query(
+            `
+            UPDATE post
+            SET points = points + $1
+            WHERE id = $2
+          `,
+            [realValue * 2, postId]
+          );
+
+          await tm.query(
+            `
+            UPDATE updoot
+            SET value = $1
+            WHERE "userId" = $2
+            AND "postId" = $3
+          `,
+            [realValue, userId, postId]
+          );
+        });
+      }
+    } else {
+      // not voted yet
+
+      await appDataSource.transaction(async (tm) => {
+        await tm.query(
+          `
+          INSERT INTO updoot ("userId", "postId", value)
+          VALUES ($1, $2, $3)
+        `,
+          [userId, postId, realValue]
+        );
+
+        await tm.query(
           `
           UPDATE post
           SET points = points + $1
           WHERE id = $2
-          `,
-          [realValue * 2, postId]
+        `,
+          [realValue, postId]
         );
-
-        await updootRepo.query(
-          `
-            UPDATE updoot
-            SET value = $3
-            WHERE "userId" = $1
-            AND "postId" = $2
-            `,
-          [userId, postId, realValue]
-        );
-      }
-    } else {
-      // await Updoot.insert({
-      //   userId,
-      //   postId,
-      //   value: realValue,
-      // });
-
-      await appDataSource.query(
-        `
-        START TRANSACTION;
-
-        INSERT INTO updoot ("userId", "postId", value)
-        VALUES (${userId}, ${postId}, ${realValue});
-
-        UPDATE post
-        SET points = points + ${realValue}
-        WHERE id = ${postId};
-
-        COMMIT;
-        `
-      );
+      });
     }
 
     return true;

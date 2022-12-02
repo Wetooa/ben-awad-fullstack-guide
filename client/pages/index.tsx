@@ -5,6 +5,7 @@ import Layout from "../components/Layout";
 import {
   Box,
   Button,
+  Container,
   Flex,
   Heading,
   Link,
@@ -13,6 +14,7 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { usePostsQuery } from "../generated/graphql";
+import UpdootSection from "../components/UpdootSection";
 
 // ssr results in the page loading before its sent to client so loading thingy doesnt show on the client
 
@@ -30,9 +32,7 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
     cursor: "",
   });
 
-  const [{ data, fetching, stale }] = usePostsQuery({
-    variables,
-  });
+  const [{ data, fetching, stale }] = usePostsQuery({ variables });
 
   if (!fetching && !data) {
     return <div className="">you got query failed for some reason</div>;
@@ -68,11 +68,17 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
                     borderWidth="1px"
                     rounded={5}
                   >
-                    <Flex justifyContent={"space-between"} marginRight={4}>
-                      <Heading fontSize="xl">{p.title}</Heading>
-                      <Text>Posted by: {p.creator.username}</Text>
+                    <Flex>
+                      <UpdootSection post={p} />
+
+                      <Container>
+                        <Flex justifyContent={"space-between"} marginRight={4}>
+                          <Heading fontSize="xl">{p.title}</Heading>
+                          <Text>Posted by: {p.creator.username}</Text>
+                        </Flex>
+                        <Text mt={3}>{p.textSnippet}</Text>
+                      </Container>
                     </Flex>
-                    <Text mt={3}>{p.textSnippet}</Text>
                   </Box>
                 );
               })}
