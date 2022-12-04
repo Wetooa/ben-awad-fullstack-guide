@@ -73,7 +73,9 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
 
                       <Container>
                         <Flex justifyContent={"space-between"} marginRight={4}>
-                          <Heading fontSize="xl">{p.title}</Heading>
+                          <Link fontSize="xl" href={`/post/${p.id}`}>
+                            {p.title}
+                          </Link>
                           <Text>Posted by: {p.creator.username}</Text>
                         </Flex>
                         <Text mt={3}>{p.textSnippet}</Text>

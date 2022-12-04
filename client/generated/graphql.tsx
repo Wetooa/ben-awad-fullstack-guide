@@ -95,6 +95,7 @@ export type Post = {
   textSnippet: Scalars['String'];
   title: Scalars['String'];
   updatedAt: Scalars['String'];
+  voteStatus?: Maybe<Scalars['Int']>;
 };
 
 export type PostInput = {
@@ -156,13 +157,11 @@ export const PostSnippetFragmentDoc = gql`
   creatorId
   creator {
     id
-    createdAt
-    updatedAt
-    email
     username
   }
   createdAt
   updatedAt
+  voteStatus
   textSnippet
 }
     `;
@@ -278,6 +277,28 @@ export const MeDocument = gql`
 export function useMeQuery(options?: Omit<Urql.UseQueryArgs<MeQueryVariables>, 'query'>) {
   return Urql.useQuery<MeQuery, MeQueryVariables>({ query: MeDocument, ...options });
 };
+export const PostDocument = gql`
+    query Post($postId: Int!) {
+  post(id: $postId) {
+    id
+    title
+    text
+    points
+    creatorId
+    creator {
+      id
+      username
+    }
+    createdAt
+    updatedAt
+    voteStatus
+  }
+}
+    `;
+
+export function usePostQuery(options: Omit<Urql.UseQueryArgs<PostQueryVariables>, 'query'>) {
+  return Urql.useQuery<PostQuery, PostQueryVariables>({ query: PostDocument, ...options });
+};
 export const PostsDocument = gql`
     query Posts($cursor: String!, $limit: Int!) {
   posts(cursor: $cursor, limit: $limit) {
@@ -292,7 +313,7 @@ export const PostsDocument = gql`
 export function usePostsQuery(options: Omit<Urql.UseQueryArgs<PostsQueryVariables>, 'query'>) {
   return Urql.useQuery<PostsQuery, PostsQueryVariables>({ query: PostsDocument, ...options });
 };
-export type PostSnippetFragment = { __typename?: 'Post', id: number, title: string, text: string, points: number, creatorId: number, createdAt: string, updatedAt: string, textSnippet: string, creator: { __typename?: 'User', id: number, createdAt: string, updatedAt: string, email: string, username: string } };
+export type PostSnippetFragment = { __typename?: 'Post', id: number, title: string, text: string, points: number, creatorId: number, createdAt: string, updatedAt: string, voteStatus?: number | null, textSnippet: string, creator: { __typename?: 'User', id: number, username: string } };
 
 export type RegularErrorFragment = { __typename?: 'FieldError', field: string, message: string };
 
@@ -356,10 +377,17 @@ export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type MeQuery = { __typename?: 'Query', me?: { __typename?: 'User', id: number, username: string, email: string } | null };
 
+export type PostQueryVariables = Exact<{
+  postId: Scalars['Int'];
+}>;
+
+
+export type PostQuery = { __typename?: 'Query', post?: { __typename?: 'Post', id: number, title: string, text: string, points: number, creatorId: number, createdAt: string, updatedAt: string, voteStatus?: number | null, creator: { __typename?: 'User', id: number, username: string } } | null };
+
 export type PostsQueryVariables = Exact<{
   cursor: Scalars['String'];
   limit: Scalars['Int'];
 }>;
 
 
-export type PostsQuery = { __typename?: 'Query', posts: { __typename?: 'PaginatedPosts', hasMore: boolean, posts: Array<{ __typename?: 'Post', id: number, title: string, text: string, points: number, creatorId: number, createdAt: string, updatedAt: string, textSnippet: string, creator: { __typename?: 'User', id: number, createdAt: string, updatedAt: string, email: string, username: string } }> } };
+export type PostsQuery = { __typename?: 'Query', posts: { __typename?: 'PaginatedPosts', hasMore: boolean, posts: Array<{ __typename?: 'Post', id: number, title: string, text: string, points: number, creatorId: number, createdAt: string, updatedAt: string, voteStatus?: number | null, textSnippet: string, creator: { __typename?: 'User', id: number, username: string } }> } };

@@ -4,6 +4,7 @@ import {
   fetchExchange,
   stringifyVariables,
   Exchange,
+  gql,
 } from "urql";
 import {
   LoginMutation,
@@ -11,12 +12,17 @@ import {
   MeDocument,
   MeQuery,
   RegisterMutation,
+  VoteMutationVariables,
 } from "../generated/graphql";
 import { betterUpdateQuery } from "./betterUpdateQuery";
 import { pipe, tap } from "wonka";
 import Router from "next/router";
 
 // error handling
+// basically if we recieve an error from the server, we run this then send user to login
+
+const isServer = typeof window === "undefined";
+
 export const errorExchange: Exchange =
   ({ forward }) =>
   (ops$) => {
@@ -129,82 +135,141 @@ export const cursorPagination = (): Resolver => {
   };
 };
 
-export const createUrqlClient = (ssrExchange: any) => ({
-  url: "http://localhost:5000/graphql",
-  fetchOptions: {
-    credentials: "include" as const,
-  },
+export const createUrqlClient = (ssrExchange: any, ctx: any) => {
+  let cookie = "";
+  if (isServer) cookie = ctx.req.headers.cookie;
 
-  // do this to update apollo cache so we get updated me query and homepage
-  exchanges: [
-    dedupExchange,
-    cacheExchange({
-      keys: {
-        PaginatedPosts: () => null,
-      },
-      resolvers: {
-        Query: {
-          // this runs evertime we run posts query
-          posts: cursorPagination(),
+  return {
+    url: "http://localhost:5000/graphql",
+    fetchOptions: {
+      credentials: "include" as const,
+      headers: cookie
+        ? {
+            cookie,
+          }
+        : undefined,
+    },
+
+    // do this to update apollo cache so we get updated me query and homepage
+    exchanges: [
+      dedupExchange,
+      cacheExchange({
+        keys: {
+          PaginatedPosts: () => null,
         },
-      },
-      updates: {
-        // i have no idea what this all means btw hahahah
-
-        Mutation: {
-          createPost: (_result, _args, cache, _info) => {
-            // the big idea why we do this is becuz we added our new psot on top, but it might mean that a new post arrived earlier and we just didnt reload it so we like say hey there might be new ones so invalidate all the posts saved in the cache when we make a post gets g???
-
-            const allFields = cache.inspectFields("Query");
-            const fieldInfos = allFields.filter(
-              (info) => info.fieldName === "posts"
-            );
-
-            fieldInfos.forEach((fi) => {
-              cache.invalidate("Query", "posts");
-            });
-          },
-
-          logout: (_result, _args, cache, _info) => {
-            // me query
-            betterUpdateQuery<LogoutMutation, MeQuery>(
-              cache,
-              { query: MeDocument },
-              _result,
-              (_result, _query) => ({ me: null })
-            );
-          },
-
-          login: (_result, _args, cache, _info) => {
-            betterUpdateQuery<LoginMutation, MeQuery>(
-              cache,
-              { query: MeDocument },
-              _result,
-              (result, query) => {
-                if (result.login.errors) {
-                  return query;
-                } else return { me: result.login.user };
-              }
-            );
-          },
-
-          register: (_result, _args, cache, _info) => {
-            betterUpdateQuery<RegisterMutation, MeQuery>(
-              cache,
-              { query: MeDocument },
-              _result,
-              (result, query) => {
-                if (result.register.errors) {
-                  return query;
-                } else return { me: result.register.user };
-              }
-            );
+        resolvers: {
+          Query: {
+            // this runs evertime we run posts query
+            posts: cursorPagination(),
           },
         },
-      },
-    }),
-    errorExchange,
-    ssrExchange,
-    fetchExchange,
-  ],
-});
+        updates: {
+          // i have no idea what this all means btw hahahah
+
+          Mutation: {
+            vote: (_result, args, cache, _info) => {
+              // so like we get the shit in the cache
+              // HAHAHAHAHHA I HAVE CONQUERED YOU URQL CLIENT!!!!!
+
+              const { postId, value } = args as VoteMutationVariables;
+
+              const data = cache.readFragment(
+                gql`
+                  fragment _ on Post {
+                    id
+                    points
+                    voteStatus
+                  }
+                `,
+                { id: postId }
+              );
+
+              // console.log(data);
+
+              if (data) {
+                let newPoints;
+                let newVoteStatus;
+
+                if (data.voteStatus === null) {
+                  // if we dont have a vote status yet
+                  newPoints = data.points + value;
+                  newVoteStatus = value;
+                } else if (data.voteStatus === value) {
+                  // if we vote on the same one
+                  newPoints = data.points - value;
+                  newVoteStatus = null;
+                } else {
+                  // if we vote the other one
+                  newPoints = data.points + value * 2;
+                  newVoteStatus = -1 * data.voteStatus;
+                }
+
+                cache.writeFragment(
+                  gql`
+                    fragment _ on Post {
+                      points
+                      voteStatus
+                    }
+                  `,
+                  { id: postId, points: newPoints, voteStatus: newVoteStatus }
+                );
+              }
+            },
+
+            createPost: (_result, _args, cache, _info) => {
+              // the big idea why we do this is becuz we added our new psot on top, but it might mean that a new post arrived earlier and we just didnt reload it so we like say hey there might be new ones so invalidate all the posts saved in the cache when we make a post gets g???
+
+              const allFields = cache.inspectFields("Query");
+              const fieldInfos = allFields.filter(
+                (info) => info.fieldName === "posts"
+              );
+
+              fieldInfos.forEach((fi) => {
+                cache.invalidate("Query", "posts");
+              });
+            },
+
+            logout: (_result, _args, cache, _info) => {
+              // me query
+              betterUpdateQuery<LogoutMutation, MeQuery>(
+                cache,
+                { query: MeDocument },
+                _result,
+                (_result, _query) => ({ me: null })
+              );
+            },
+
+            login: (_result, _args, cache, _info) => {
+              betterUpdateQuery<LoginMutation, MeQuery>(
+                cache,
+                { query: MeDocument },
+                _result,
+                (result, query) => {
+                  if (result.login.errors) {
+                    return query;
+                  } else return { me: result.login.user };
+                }
+              );
+            },
+
+            register: (_result, _args, cache, _info) => {
+              betterUpdateQuery<RegisterMutation, MeQuery>(
+                cache,
+                { query: MeDocument },
+                _result,
+                (result, query) => {
+                  if (result.register.errors) {
+                    return query;
+                  } else return { me: result.register.user };
+                }
+              );
+            },
+          },
+        },
+      }),
+      errorExchange,
+      ssrExchange,
+      fetchExchange,
+    ],
+  };
+};

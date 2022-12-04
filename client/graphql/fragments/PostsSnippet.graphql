@@ -6,12 +6,10 @@ fragment PostSnippet on Post {
   creatorId
   creator {
     id
-    createdAt
-    updatedAt
-    email
     username
   }
   createdAt
   updatedAt
+  voteStatus
   textSnippet
 }

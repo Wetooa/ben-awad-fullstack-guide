@@ -1,4 +1,4 @@
-import { Box, Button, Flex } from "@chakra-ui/react";
+import { Box, Button, Container, Flex, Heading } from "@chakra-ui/react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useLogoutMutation, useMeQuery } from "../generated/graphql";
@@ -7,6 +7,7 @@ import Loading from "./Loading";
 interface NavBarProps {}
 
 const NavBar: React.FC<NavBarProps> = ({}) => {
+  // no longer needed
   const [isServer, setIsServer] = useState(true);
 
   useEffect(() => {
@@ -30,8 +31,13 @@ const NavBar: React.FC<NavBarProps> = ({}) => {
     );
   } else {
     body = (
-      <>
-        <Box>{data?.me?.username}</Box>
+      <Flex
+        justifyContent={"flex-end"}
+        width="fit-content"
+        alignItems={"center"}
+      >
+        <Container>{data?.me?.username}</Container>
+
         <Button
           onClick={() => {
             logout({});
@@ -41,7 +47,7 @@ const NavBar: React.FC<NavBarProps> = ({}) => {
         >
           Log out
         </Button>
-      </>
+      </Flex>
     );
   }
 
@@ -49,11 +55,16 @@ const NavBar: React.FC<NavBarProps> = ({}) => {
     <Box zIndex={1} position={"sticky"} top={0} width={"100%"}>
       <Flex
         gap={2}
-        justifyContent={"flex-end"}
+        justifyContent={"space-between"}
         bg="forestgreen"
         p={4}
         ml={"auto"}
       >
+        <Box>
+          <Link href={"/"}>
+            <Heading>LiReddit</Heading>
+          </Link>
+        </Box>
         {body}
       </Flex>
     </Box>

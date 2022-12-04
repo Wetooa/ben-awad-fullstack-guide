@@ -66,7 +66,8 @@ export class PostResolver {
   @Query(() => PaginatedPosts)
   async posts(
     @Arg("limit", () => Int) limit: number,
-    @Arg("cursor", () => String) cursor: string
+    @Arg("cursor", () => String) cursor: string,
+    @Ctx() { req }: MyContext
   ): Promise<PaginatedPosts> {
     const userRepo = appDataSource.getRepository(Post);
     const realLimit = Math.min(50, limit);
@@ -77,7 +78,15 @@ export class PostResolver {
     // cursor is like get the shit after that certain post
 
     const replacements: any[] = [realLimitPlusOne];
-    if (cursor) replacements.push(new Date(parseInt(cursor)));
+
+    if (req.session.userId) replacements.push(req.session.userId);
+
+    let cursorIndex = 3;
+
+    if (cursor) {
+      replacements.push(new Date(parseInt(cursor)));
+      cursorIndex = replacements.length;
+    }
 
     // query is kinda like mysql so yea it feels good what I learned didnt go to waste hahahahha
     const posts = await userRepo.query(
@@ -89,11 +98,20 @@ export class PostResolver {
         'email', u.email,
         'createdAt', u."createdAt",
         'updatedAt', u."updatedAt"
-        ) creator
+        ) creator, ${
+          req.session.userId
+            ? `
+        (
+          SELECT value
+          FROM updoot
+          WHERE "userId" = $2 and "postId" = p.id
+        ) "voteStatus"`
+            : `null as "voteStatus"`
+        }
       FROM post p
       INNER JOIN public.user u
       ON u.id = p."creatorId"
-      ${cursor && `WHERE p."createdAt" < $2`}
+      ${cursor && `WHERE p."createdAt" < $${cursorIndex}`}
       ORDER BY p."createdAt" DESC
       LIMIT $1
     `,
@@ -120,7 +138,8 @@ export class PostResolver {
 
   @Query(() => Post, { nullable: true })
   post(@Arg("id", () => Int) id: number): Promise<Post | null> {
-    return Post.findOne({ where: { id } });
+    // easy way of making join statements using typeorm
+    return Post.findOne({ where: { id }, relations: ["creator"] });
   }
 
   @Mutation(() => PostResponse)
