@@ -74,7 +74,6 @@ export class PostResolver {
     const realLimitPlusOne = realLimit + 1;
 
     // docs says its better to use take instead of limit so we will use that lol
-
     // cursor is like get the shit after that certain post
 
     const replacements: any[] = [realLimitPlusOne];
@@ -117,18 +116,6 @@ export class PostResolver {
     `,
       replacements
     );
-
-    // const qb = userRepo
-    //   .createQueryBuilder("p")
-    //   .innerJoinAndSelect("p.creator", "u", 'u.id = :p."creatorId"')
-    //   .orderBy('p."createdAt"', "DESC")
-    //   .take(realLimitPlusOne);
-
-    // if (cursor) {
-    //   qb.where('p."createdAt" < :cursor', {
-    //     cursor: new Date(parseInt(cursor)),
-    //   });
-    // }
 
     return {
       posts: posts.slice(0, realLimit),
@@ -175,6 +162,7 @@ export class PostResolver {
   }
 
   @Mutation(() => Post, { nullable: true })
+  @UseMiddleware(isAuth)
   async updatePost(
     @Arg("id", () => Int) id: number,
     @Arg("title", () => String, { nullable: true }) title: string
@@ -192,8 +180,12 @@ export class PostResolver {
   }
 
   @Mutation(() => Boolean)
-  async deletePost(@Arg("id", () => Int) id: number): Promise<boolean> {
-    await Post.delete({ id });
+  @UseMiddleware(isAuth)
+  async deletePost(
+    @Arg("id", () => Int) id: number,
+    @Ctx() { req }: MyContext
+  ): Promise<boolean> {
+    await Post.delete({ id, creatorId: req.session.userId });
     return true;
   }
 

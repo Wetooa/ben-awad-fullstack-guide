@@ -1,22 +1,22 @@
-import { Box, Button, Container, Flex, Heading } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading } from "@chakra-ui/react";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useLogoutMutation, useMeQuery } from "../generated/graphql";
 import Loading from "./Loading";
 
 interface NavBarProps {}
 
 const NavBar: React.FC<NavBarProps> = ({}) => {
-  // no longer needed
-  const [isServer, setIsServer] = useState(true);
+  // // no longer needed
+  // const [isServer, setIsServer] = useState(true);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    setIsServer(typeof window === "undefined");
-  }, []);
+  // useEffect(() => {
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  //   setIsServer(typeof window === "undefined");
+  // }, []);
 
   const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
-  const [{ data, fetching }] = useMeQuery({ pause: isServer });
+  const [{ data, fetching }] = useMeQuery();
 
   let body = null;
 
@@ -31,12 +31,12 @@ const NavBar: React.FC<NavBarProps> = ({}) => {
     );
   } else {
     body = (
-      <Flex
-        justifyContent={"flex-end"}
-        width="fit-content"
-        alignItems={"center"}
-      >
-        <Container>{data?.me?.username}</Container>
+      <Flex justifyContent={"flex-end"} alignItems={"center"} gap={2}>
+        <Button as={Link} ml="auto" href={"/create-post"} width="fit-content">
+          create post
+        </Button>
+
+        <Box>{data?.me?.username}</Box>
 
         <Button
           onClick={() => {

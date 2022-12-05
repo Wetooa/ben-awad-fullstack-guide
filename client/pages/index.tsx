@@ -8,13 +8,15 @@ import {
   Container,
   Flex,
   Heading,
+  IconButton,
   Link,
   Stack,
   Text,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { usePostsQuery } from "../generated/graphql";
+import { useDeletePostMutation, usePostsQuery } from "../generated/graphql";
 import UpdootSection from "../components/UpdootSection";
+import { DeleteIcon } from "@chakra-ui/icons";
 
 // ssr results in the page loading before its sent to client so loading thingy doesnt show on the client
 
@@ -27,12 +29,15 @@ import UpdootSection from "../components/UpdootSection";
 
 export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
   // we can cast useStates this way
+  const [deletingPostId, setDeleteingPostId] = useState(-1);
+
   const [variables, setVariables] = useState({
     limit: 15,
     cursor: "",
   });
 
   const [{ data, fetching, stale }] = usePostsQuery({ variables });
+  const [{ fetching: deleteFetching }, deletePost] = useDeletePostMutation();
 
   if (!fetching && !data) {
     return <div className="">you got query failed for some reason</div>;
@@ -47,20 +52,10 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
         </>
       ) : (
         <Layout>
-          <Flex align="center">
-            <Heading>REDDIT CLONE</Heading>
-            <Link ml={"auto"} href="/create-post">
-              create post
-            </Link>
-          </Flex>
-
-          <br />
-          <br />
-
           {!data ? null : (
-            <Stack spacing={8}>
-              {data.posts.posts.map((p) => {
-                return (
+            <Stack spacing={8} mt={8}>
+              {data.posts.posts.map((p) =>
+                !p ? null : (
                   <Box
                     key={p.id}
                     p={5}
@@ -71,19 +66,37 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
                     <Flex>
                       <UpdootSection post={p} />
 
-                      <Container>
-                        <Flex justifyContent={"space-between"} marginRight={4}>
+                      <Container mr={2}>
+                        <Flex justifyContent={"space-between"}>
                           <Link fontSize="xl" href={`/post/${p.id}`}>
                             {p.title}
                           </Link>
                           <Text>Posted by: {p.creator.username}</Text>
                         </Flex>
-                        <Text mt={3}>{p.textSnippet}</Text>
+                        <Flex>
+                          <Text mt={3}>{p.textSnippet}</Text>
+                          <IconButton
+                            isLoading={
+                              deleteFetching && deletingPostId === p.id
+                            }
+                            ml={"auto"}
+                            aria-label="Delete"
+                            name="chevron-up"
+                            onClick={async () => {
+                              setDeleteingPostId(p.id);
+                              await deletePost({ deletePostId: p.id });
+                              setDeleteingPostId(-1);
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Flex>
                       </Container>
                     </Flex>
                   </Box>
-                );
-              })}
+                )
+              )}
+
               {data.posts.hasMore && (
                 <Flex>
                   <Button

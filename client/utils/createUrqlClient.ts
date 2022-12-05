@@ -21,8 +21,6 @@ import Router from "next/router";
 // error handling
 // basically if we recieve an error from the server, we run this then send user to login
 
-const isServer = typeof window === "undefined";
-
 export const errorExchange: Exchange =
   ({ forward }) =>
   (ops$) => {
@@ -135,19 +133,17 @@ export const cursorPagination = (): Resolver => {
   };
 };
 
+const isServer = typeof window === "undefined";
+
 export const createUrqlClient = (ssrExchange: any, ctx: any) => {
-  let cookie = "";
-  if (isServer) cookie = ctx.req.headers.cookie;
+  let cookie = undefined;
+  if (isServer && ctx) cookie = ctx.req.headers.cookie;
 
   return {
     url: "http://localhost:5000/graphql",
     fetchOptions: {
       credentials: "include" as const,
-      headers: cookie
-        ? {
-            cookie,
-          }
-        : undefined,
+      headers: { cookie },
     },
 
     // do this to update apollo cache so we get updated me query and homepage
@@ -167,12 +163,20 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
           // i have no idea what this all means btw hahahah
 
           Mutation: {
+            deletePost: (_result, args, cache, _info) => {
+              const { id } = args;
+
+              cache.invalidate({
+                __typename: "Post",
+                id: JSON.stringify(id),
+              });
+            },
+
             vote: (_result, args, cache, _info) => {
               // so like we get the shit in the cache
               // HAHAHAHAHHA I HAVE CONQUERED YOU URQL CLIENT!!!!!
 
               const { postId, value } = args as VoteMutationVariables;
-
               const data = cache.readFragment(
                 gql`
                   fragment _ on Post {
@@ -183,8 +187,6 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                 `,
                 { id: postId }
               );
-
-              // console.log(data);
 
               if (data) {
                 let newPoints;
@@ -224,8 +226,10 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                 (info) => info.fieldName === "posts"
               );
 
+              // why the fuck did this go back in time wtffff
+              // spent so much time on this bullshit getting sent back on time
               fieldInfos.forEach((fi) => {
-                cache.invalidate("Query", "posts");
+                cache.invalidate("Query", "posts", fi.arguments || {});
               });
             },
 
@@ -237,9 +241,27 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                 _result,
                 (_result, _query) => ({ me: null })
               );
+
+              const allFields = cache.inspectFields("Query");
+              const fieldInfos = allFields.filter(
+                (info) => info.fieldName === "posts"
+              );
+
+              fieldInfos.forEach((fi) => {
+                cache.invalidate("Query", "posts", fi.arguments || {});
+              });
             },
 
             login: (_result, _args, cache, _info) => {
+              const allFields = cache.inspectFields("Query");
+              const fieldInfos = allFields.filter(
+                (info) => info.fieldName === "posts"
+              );
+
+              fieldInfos.forEach((fi) => {
+                cache.invalidate("Query", "posts", fi.arguments || {});
+              });
+
               betterUpdateQuery<LoginMutation, MeQuery>(
                 cache,
                 { query: MeDocument },
