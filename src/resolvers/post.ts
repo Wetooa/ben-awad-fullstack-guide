@@ -18,6 +18,7 @@ import { isAuth } from "../middleware/isAuth";
 import { FieldError } from "./user";
 import { appDataSource } from "../";
 import { Updoot } from "../entities/Updoot";
+import { postValidate } from "../utils/postValidate";
 
 // ok so resolver is where we make our commands, kinda like the controllers
 // the queries are the individual controllers
@@ -30,7 +31,7 @@ NAME(@Ctx() {CONTEXT_THINGY}: CONTEXT_TYPE_PROP): RETURN TYPE {
 */
 
 @InputType()
-class PostInput {
+export class PostInput {
   @Field(() => String)
   title!: string;
 
@@ -42,6 +43,9 @@ class PostInput {
 class PostResponse {
   @Field(() => [FieldError], { nullable: true })
   errors?: FieldError[];
+
+  @Field(() => Post, { nullable: true })
+  post?: Post;
 }
 
 @ObjectType()
@@ -77,9 +81,7 @@ export class PostResolver {
     // cursor is like get the shit after that certain post
 
     const replacements: any[] = [realLimitPlusOne];
-
     if (req.session.userId) replacements.push(req.session.userId);
-
     let cursorIndex = 3;
 
     if (cursor) {
@@ -135,22 +137,7 @@ export class PostResolver {
     @Arg("input", () => PostInput) input: PostInput,
     @Ctx() { req }: MyContext
   ): Promise<PostResponse> {
-    const errors: FieldError[] = [];
-
-    if (input.title.length < 2) {
-      errors.push({
-        field: "title",
-        message: "Title field cannot be empty!",
-      });
-    }
-
-    if (input.text.length < 2) {
-      errors.push({
-        field: "text",
-        message: "Text field cannot be empty!",
-      });
-    }
-
+    const errors = postValidate(input);
     if (errors.length > 0) return { errors };
 
     await Post.create({
@@ -161,22 +148,30 @@ export class PostResolver {
     return {};
   }
 
-  @Mutation(() => Post, { nullable: true })
+  @Mutation(() => PostResponse)
   @UseMiddleware(isAuth)
   async updatePost(
     @Arg("id", () => Int) id: number,
-    @Arg("title", () => String, { nullable: true }) title: string
-  ): Promise<Post | null> {
-    const post = await Post.findOne({ where: { id } });
-    if (!post) {
-      return null;
-    }
+    @Arg("input", () => PostInput) input: PostInput,
+    @Ctx() { req }: MyContext
+  ): Promise<PostResponse> {
+    const errors = postValidate(input);
+    if (errors.length > 0) return { errors };
 
-    if (typeof title !== "undefined") {
-      post.title = title;
-      await Post.update({ id }, { title });
-    }
-    return post;
+    const { text, title } = input;
+
+    const result = await appDataSource
+      .createQueryBuilder()
+      .update(Post)
+      .set({ title, text })
+      .where('id = :id and "creatorId" = :creatorId', {
+        id,
+        creatorId: req.session.userId,
+      })
+      .returning("*")
+      .execute();
+
+    return { post: result.raw[0] };
   }
 
   @Mutation(() => Boolean)

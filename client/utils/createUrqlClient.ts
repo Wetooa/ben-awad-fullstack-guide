@@ -137,7 +137,7 @@ const isServer = typeof window === "undefined";
 
 export const createUrqlClient = (ssrExchange: any, ctx: any) => {
   let cookie = undefined;
-  if (isServer && ctx) cookie = ctx.req.headers.cookie;
+  if (isServer) cookie = ctx?.req?.headers?.cookie;
 
   return {
     url: "http://localhost:5000/graphql",
@@ -163,6 +163,15 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
           // i have no idea what this all means btw hahahah
 
           Mutation: {
+            updatePost: (_result, args, cache, _info) => {
+              const { id } = args;
+
+              cache.invalidate({
+                __typename: "Post",
+                id: JSON.stringify(id),
+              });
+            },
+
             deletePost: (_result, args, cache, _info) => {
               const { id } = args;
 

@@ -43,6 +43,7 @@ const InputField: React.FC<InputFieldProps> = ({
         {...props}
         id={field.name}
         autoComplete="on"
+        height={textarea ? "48" : "12"}
       />
 
       {error ? <FormErrorMessage>{error}</FormErrorMessage> : null}

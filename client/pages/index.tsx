@@ -2,21 +2,11 @@ import { withUrqlClient } from "next-urql";
 import { createUrqlClient } from "../utils/createUrqlClient";
 import Loading from "../components/Loading";
 import Layout from "../components/Layout";
-import {
-  Box,
-  Button,
-  Container,
-  Flex,
-  Heading,
-  IconButton,
-  Link,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
+import { Box, Button, Flex, Link, Stack, Text } from "@chakra-ui/react";
 import { useState } from "react";
-import { useDeletePostMutation, usePostsQuery } from "../generated/graphql";
+import { useMeQuery, usePostsQuery } from "../generated/graphql";
 import UpdootSection from "../components/UpdootSection";
-import { DeleteIcon } from "@chakra-ui/icons";
+import EditDeletePostButtons from "../components/EditDeletePostButtons";
 
 // ssr results in the page loading before its sent to client so loading thingy doesnt show on the client
 
@@ -28,19 +18,21 @@ import { DeleteIcon } from "@chakra-ui/icons";
 // no need to ssr everything. only ssr dynamic pages which need server requests while static pages such as login forms can be left with no ssr
 
 export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
-  // we can cast useStates this way
-  const [deletingPostId, setDeleteingPostId] = useState(-1);
-
+  const [deletingPostId, setDeletingPostId] = useState(-1);
   const [variables, setVariables] = useState({
     limit: 15,
     cursor: "",
   });
 
   const [{ data, fetching, stale }] = usePostsQuery({ variables });
-  const [{ fetching: deleteFetching }, deletePost] = useDeletePostMutation();
+  const [{ data: meData, fetching: meFetching }] = useMeQuery();
 
   if (!fetching && !data) {
-    return <div className="">you got query failed for some reason</div>;
+    return (
+      <Layout>
+        <div className="">you got query failed for some reason</div>;
+      </Layout>
+    );
   }
 
   return (
@@ -58,40 +50,38 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
                 !p ? null : (
                   <Box
                     key={p.id}
-                    p={5}
+                    p={4}
                     shadow="lg"
                     borderWidth="1px"
                     rounded={5}
                   >
-                    <Flex>
+                    <Flex gap={4}>
                       <UpdootSection post={p} />
 
-                      <Container mr={2}>
-                        <Flex justifyContent={"space-between"}>
+                      <Flex
+                        width={"100%"}
+                        mr={2}
+                        justifyContent={"space-between"}
+                      >
+                        <Flex flexDirection={"column"} width={"75%"}>
                           <Link fontSize="xl" href={`/post/${p.id}`}>
                             {p.title}
                           </Link>
-                          <Text>Posted by: {p.creator.username}</Text>
-                        </Flex>
-                        <Flex>
                           <Text mt={3}>{p.textSnippet}</Text>
-                          <IconButton
-                            isLoading={
-                              deleteFetching && deletingPostId === p.id
-                            }
-                            ml={"auto"}
-                            aria-label="Delete"
-                            name="chevron-up"
-                            onClick={async () => {
-                              setDeleteingPostId(p.id);
-                              await deletePost({ deletePostId: p.id });
-                              setDeleteingPostId(-1);
-                            }}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
                         </Flex>
-                      </Container>
+                        <Flex flexDirection={"column"} gap={3}>
+                          <Text>Posted by: {p.creator.username}</Text>
+                          {meData &&
+                            !meFetching &&
+                            meData.me?.id === p.creatorId && (
+                              <EditDeletePostButtons
+                                setId={setDeletingPostId}
+                                currentPostId={deletingPostId}
+                                postId={p.id}
+                              />
+                            )}
+                        </Flex>
+                      </Flex>
                     </Flex>
                   </Box>
                 )

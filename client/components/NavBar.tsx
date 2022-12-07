@@ -7,14 +7,6 @@ import Loading from "./Loading";
 interface NavBarProps {}
 
 const NavBar: React.FC<NavBarProps> = ({}) => {
-  // // no longer needed
-  // const [isServer, setIsServer] = useState(true);
-
-  // useEffect(() => {
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  //   setIsServer(typeof window === "undefined");
-  // }, []);
-
   const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
   const [{ data, fetching }] = useMeQuery();
 

@@ -21,13 +21,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PostResolver = void 0;
+exports.PostResolver = exports.PostInput = void 0;
 const Post_1 = require("../entities/Post");
 const type_graphql_1 = require("type-graphql");
 const isAuth_1 = require("../middleware/isAuth");
 const user_1 = require("./user");
 const __1 = require("../");
 const Updoot_1 = require("../entities/Updoot");
+const postValidate_1 = require("../utils/postValidate");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -41,12 +42,17 @@ __decorate([
 PostInput = __decorate([
     (0, type_graphql_1.InputType)()
 ], PostInput);
+exports.PostInput = PostInput;
 let PostResponse = class PostResponse {
 };
 __decorate([
     (0, type_graphql_1.Field)(() => [user_1.FieldError], { nullable: true }),
     __metadata("design:type", Array)
 ], PostResponse.prototype, "errors", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => Post_1.Post, { nullable: true }),
+    __metadata("design:type", Post_1.Post)
+], PostResponse.prototype, "post", void 0);
 PostResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], PostResponse);
@@ -116,36 +122,30 @@ let PostResolver = class PostResolver {
     }
     createPost(input, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const errors = [];
-            if (input.title.length < 2) {
-                errors.push({
-                    field: "title",
-                    message: "Title field cannot be empty!",
-                });
-            }
-            if (input.text.length < 2) {
-                errors.push({
-                    field: "text",
-                    message: "Text field cannot be empty!",
-                });
-            }
+            const errors = (0, postValidate_1.postValidate)(input);
             if (errors.length > 0)
                 return { errors };
             yield Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save();
             return {};
         });
     }
-    updatePost(id, title) {
+    updatePost(id, input, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const post = yield Post_1.Post.findOne({ where: { id } });
-            if (!post) {
-                return null;
-            }
-            if (typeof title !== "undefined") {
-                post.title = title;
-                yield Post_1.Post.update({ id }, { title });
-            }
-            return post;
+            const errors = (0, postValidate_1.postValidate)(input);
+            if (errors.length > 0)
+                return { errors };
+            const { text, title } = input;
+            const result = yield __1.appDataSource
+                .createQueryBuilder()
+                .update(Post_1.Post)
+                .set({ title, text })
+                .where('id = :id and "creatorId" = :creatorId', {
+                id,
+                creatorId: req.session.userId,
+            })
+                .returning("*")
+                .execute();
+            return { post: result.raw[0] };
         });
     }
     deletePost(id, { req }) {
@@ -241,12 +241,13 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "createPost", null);
 __decorate([
-    (0, type_graphql_1.Mutation)(() => Post_1.Post, { nullable: true }),
+    (0, type_graphql_1.Mutation)(() => PostResponse),
     (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
     __param(0, (0, type_graphql_1.Arg)("id", () => type_graphql_1.Int)),
-    __param(1, (0, type_graphql_1.Arg)("title", () => String, { nullable: true })),
+    __param(1, (0, type_graphql_1.Arg)("input", () => PostInput)),
+    __param(2, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, String]),
+    __metadata("design:paramtypes", [Number, PostInput, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "updatePost", null);
 __decorate([
