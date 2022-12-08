@@ -1,11 +1,11 @@
-import { Box, Button } from "@chakra-ui/react";
-import { Formik, Form } from "formik";
-import { withUrqlClient } from "next-urql";
-import { useRouter } from "next/router";
 import React from "react";
 import InputField from "../../../components/InputField";
 import Layout from "../../../components/Layout";
 import Loading from "../../../components/Loading";
+import { Box, Button } from "@chakra-ui/react";
+import { Formik, Form } from "formik";
+import { withUrqlClient } from "next-urql";
+import { useRouter } from "next/router";
 import { useUpdatePostMutation } from "../../../generated/graphql";
 import { createUrqlClient } from "../../../utils/createUrqlClient";
 import { toErrorMap } from "../../../utils/toErrorMap";
@@ -59,7 +59,7 @@ const Edit: React.FC<EditProps> = ({}) => {
             setErrors(toErrorMap(response.data.updatePost.errors));
           } else {
             setTimeout(() => {
-              router.back()
+              router.back();
             }, 1000);
           }
         }}

@@ -1,4 +1,4 @@
-import { cacheExchange, Resolver } from "@urql/exchange-graphcache";
+import { cacheExchange, Resolver, Cache } from "@urql/exchange-graphcache";
 import {
   dedupExchange,
   fetchExchange,
@@ -77,63 +77,19 @@ export const cursorPagination = (): Resolver => {
       hasMore,
       posts: results,
     };
-
-    // then we get the cursor
-    //   const visited = new Set();
-    //   let result: NullArray<string> = [];
-    //   let prevOffset: number | null = null;
-
-    //   for (let i = 0; i < size; i++) {
-    //     const { fieldKey, arguments: args } = fieldInfos[i];
-    //     if (args === null || !compareArgs(fieldArgs, args)) {
-    //       continue;
-    //     }
-
-    //     const links = cache.resolve(entityKey, fieldKey) as string[];
-    //     const currentOffset = args[cursorArgument];
-
-    //     if (
-    //       links === null ||
-    //       links.length === 0 ||
-    //       typeof currentOffset !== "number"
-    //     ) {
-    //       continue;
-    //     }
-
-    //     const tempResult: NullArray<string> = [];
-
-    //     for (let j = 0; j < links.length; j++) {
-    //       const link = links[j];
-    //       if (visited.has(link)) continue;
-    //       tempResult.push(link);
-    //       visited.add(link);
-    //     }
-
-    //     if (
-    //       (!prevOffset || currentOffset > prevOffset) ===
-    //       (mergeMode === "after")
-    //     ) {
-    //       result = [...result, ...tempResult];
-    //     } else {
-    //       result = [...tempResult, ...result];
-    //     }
-
-    //     prevOffset = currentOffset;
-    //   }
-
-    //   const hasCurrentPage = cache.resolve(entityKey, fieldName, fieldArgs);
-    //   if (hasCurrentPage) {
-    //     return result;
-    //   } else if (!(info as any).store.schema) {
-    //     return undefined;
-    //   } else {
-    //     info.partial = true;
-    //     return result;
-    //   }
   };
 };
 
 const isServer = typeof window === "undefined";
+
+const invalidateCache = (cache: Cache) => {
+  const allFields = cache.inspectFields("Query");
+  const fieldInfos = allFields.filter((info) => info.fieldName === "posts");
+
+  fieldInfos.forEach((fi) => {
+    cache.invalidate("Query", "posts", fi.arguments || {});
+  });
+};
 
 export const createUrqlClient = (ssrExchange: any, ctx: any) => {
   let cookie = undefined;
@@ -155,17 +111,14 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
         },
         resolvers: {
           Query: {
-            // this runs evertime we run posts query
             posts: cursorPagination(),
           },
         },
         updates: {
-          // i have no idea what this all means btw hahahah
-
           Mutation: {
             updatePost: (_result, args, cache, _info) => {
+              // when we update post, we remove said post and like uknow get it again
               const { id } = args;
-
               cache.invalidate({
                 __typename: "Post",
                 id: JSON.stringify(id),
@@ -173,8 +126,8 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
             },
 
             deletePost: (_result, args, cache, _info) => {
+              // when we delete a post, we remove said post from yea
               const { id } = args;
-
               cache.invalidate({
                 __typename: "Post",
                 id: JSON.stringify(id),
@@ -182,9 +135,6 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
             },
 
             vote: (_result, args, cache, _info) => {
-              // so like we get the shit in the cache
-              // HAHAHAHAHHA I HAVE CONQUERED YOU URQL CLIENT!!!!!
-
               const { postId, value } = args as VoteMutationVariables;
               const data = cache.readFragment(
                 gql`
@@ -228,18 +178,7 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
             },
 
             createPost: (_result, _args, cache, _info) => {
-              // the big idea why we do this is becuz we added our new psot on top, but it might mean that a new post arrived earlier and we just didnt reload it so we like say hey there might be new ones so invalidate all the posts saved in the cache when we make a post gets g???
-
-              const allFields = cache.inspectFields("Query");
-              const fieldInfos = allFields.filter(
-                (info) => info.fieldName === "posts"
-              );
-
-              // why the fuck did this go back in time wtffff
-              // spent so much time on this bullshit getting sent back on time
-              fieldInfos.forEach((fi) => {
-                cache.invalidate("Query", "posts", fi.arguments || {});
-              });
+              invalidateCache(cache);
             },
 
             logout: (_result, _args, cache, _info) => {
@@ -251,26 +190,10 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                 (_result, _query) => ({ me: null })
               );
 
-              const allFields = cache.inspectFields("Query");
-              const fieldInfos = allFields.filter(
-                (info) => info.fieldName === "posts"
-              );
-
-              fieldInfos.forEach((fi) => {
-                cache.invalidate("Query", "posts", fi.arguments || {});
-              });
+              invalidateCache(cache);
             },
 
             login: (_result, _args, cache, _info) => {
-              const allFields = cache.inspectFields("Query");
-              const fieldInfos = allFields.filter(
-                (info) => info.fieldName === "posts"
-              );
-
-              fieldInfos.forEach((fi) => {
-                cache.invalidate("Query", "posts", fi.arguments || {});
-              });
-
               betterUpdateQuery<LoginMutation, MeQuery>(
                 cache,
                 { query: MeDocument },
@@ -281,6 +204,7 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                   } else return { me: result.login.user };
                 }
               );
+              invalidateCache(cache);
             },
 
             register: (_result, _args, cache, _info) => {
@@ -294,6 +218,7 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                   } else return { me: result.register.user };
                 }
               );
+              invalidateCache(cache);
             },
           },
         },

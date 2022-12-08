@@ -19,6 +19,7 @@ import { FieldError } from "./user";
 import { appDataSource } from "../";
 import { Updoot } from "../entities/Updoot";
 import { postValidate } from "../utils/postValidate";
+import { User } from "../entities/User";
 
 // ok so resolver is where we make our commands, kinda like the controllers
 // the queries are the individual controllers
@@ -67,11 +68,31 @@ export class PostResolver {
       : root.text;
   }
 
+  @FieldResolver(() => User)
+  creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+    // data loader to optimize queries
+    return userLoader.load(post.creatorId);
+  }
+
+  @FieldResolver(() => Int, { nullable: true })
+  async voteStatus(
+    @Root() post: Post,
+    @Ctx() { updootLoader, req }: MyContext
+  ) {
+    if (!req.session.userId) {
+      return null;
+    }
+    const updoot = await updootLoader.load({
+      postId: post.id,
+      userId: req.session.userId,
+    });
+    return updoot ? updoot.value : null;
+  }
+
   @Query(() => PaginatedPosts)
   async posts(
     @Arg("limit", () => Int) limit: number,
-    @Arg("cursor", () => String) cursor: string,
-    @Ctx() { req }: MyContext
+    @Arg("cursor", () => String) cursor: string
   ): Promise<PaginatedPosts> {
     const userRepo = appDataSource.getRepository(Post);
     const realLimit = Math.min(50, limit);
@@ -81,38 +102,28 @@ export class PostResolver {
     // cursor is like get the shit after that certain post
 
     const replacements: any[] = [realLimitPlusOne];
-    if (req.session.userId) replacements.push(req.session.userId);
-    let cursorIndex = 3;
-
     if (cursor) {
       replacements.push(new Date(parseInt(cursor)));
-      cursorIndex = replacements.length;
     }
 
     // query is kinda like mysql so yea it feels good what I learned didnt go to waste hahahahha
+
+    //  ${
+    //    req.session.userId
+    //      ? `
+    //   (
+    //     SELECT value
+    //     FROM updoot
+    //     WHERE "userId" = $2 and "postId" = p.id
+    //   ) "voteStatus"`
+    //      : `null as "voteStatus"`
+    //  }
+
     const posts = await userRepo.query(
       `
-      SELECT p.*,
-      JSON_BUILD_OBJECT(
-        'id', u.id,
-        'username', u.username,
-        'email', u.email,
-        'createdAt', u."createdAt",
-        'updatedAt', u."updatedAt"
-        ) creator, ${
-          req.session.userId
-            ? `
-        (
-          SELECT value
-          FROM updoot
-          WHERE "userId" = $2 and "postId" = p.id
-        ) "voteStatus"`
-            : `null as "voteStatus"`
-        }
+      SELECT p.*
       FROM post p
-      INNER JOIN public.user u
-      ON u.id = p."creatorId"
-      ${cursor && `WHERE p."createdAt" < $${cursorIndex}`}
+      ${cursor && `WHERE p."createdAt" < $2`}
       ORDER BY p."createdAt" DESC
       LIMIT $1
     `,
@@ -126,9 +137,22 @@ export class PostResolver {
   }
 
   @Query(() => Post, { nullable: true })
-  post(@Arg("id", () => Int) id: number): Promise<Post | null> {
+  async post(@Arg("id", () => Int) id: number): Promise<Post | null> {
     // easy way of making join statements using typeorm
-    return Post.findOne({ where: { id }, relations: ["creator"] });
+
+    // let voteStatus = null;
+    // if (req.session.userId) {
+    //   voteStatus =
+    //     (
+    //       await Updoot.findOne({
+    //         where: { userId: req.session.userId, postId: id },
+    //       })
+    //     )?.value || null;
+    // }
+    // if (post) return { ...post, voteStatus } as Post;
+    // return null;
+
+    return await Post.findOne({ where: { id } });
   }
 
   @Mutation(() => PostResponse)

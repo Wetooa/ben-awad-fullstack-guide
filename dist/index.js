@@ -27,8 +27,10 @@ const morgan_1 = __importDefault(require("morgan"));
 require("dotenv/config");
 require("colors");
 const cors_1 = __importDefault(require("cors"));
-const typeorm_1 = require("typeorm");
 const typeorm_config_1 = __importDefault(require("./typeorm.config"));
+const typeorm_1 = require("typeorm");
+const createUserLoader_1 = require("./utils/createUserLoader");
+const createUpdootLoader_1 = require("./utils/createUpdootLoader");
 exports.appDataSource = new typeorm_1.DataSource(typeorm_config_1.default);
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     yield exports.appDataSource.initialize();
@@ -63,7 +65,13 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
             resolvers: [post_1.PostResolver, user_1.UserResolver],
             validate: false,
         }),
-        context: ({ req, res }) => ({ req, res, redis }),
+        context: ({ req, res }) => ({
+            req,
+            res,
+            redis,
+            userLoader: (0, createUserLoader_1.createUserLoader)(),
+            updootLoader: (0, createUpdootLoader_1.createUpdootLoader)(),
+        }),
     });
     yield apolloServer.start();
     apolloServer.applyMiddleware({

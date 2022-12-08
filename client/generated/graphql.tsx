@@ -315,6 +315,7 @@ export const PostDocument = gql`
     text
     points
     creatorId
+    voteStatus
     creator {
       id
       username
@@ -322,6 +323,7 @@ export const PostDocument = gql`
     createdAt
     updatedAt
     voteStatus
+    textSnippet
   }
 }
     `;
@@ -427,7 +429,7 @@ export type PostQueryVariables = Exact<{
 }>;
 
 
-export type PostQuery = { __typename?: 'Query', post?: { __typename?: 'Post', id: number, title: string, text: string, points: number, creatorId: number, createdAt: string, updatedAt: string, voteStatus?: number | null, creator: { __typename?: 'User', id: number, username: string } } | null };
+export type PostQuery = { __typename?: 'Query', post?: { __typename?: 'Post', id: number, title: string, text: string, points: number, creatorId: number, voteStatus?: number | null, createdAt: string, updatedAt: string, textSnippet: string, creator: { __typename?: 'User', id: number, username: string } } | null };
 
 export type PostsQueryVariables = Exact<{
   cursor: Scalars['String'];

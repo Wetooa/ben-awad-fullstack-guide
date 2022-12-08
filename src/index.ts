@@ -18,8 +18,10 @@ import "dotenv/config";
 import "colors";
 import cors from "cors";
 
-import { DataSource } from "typeorm";
 import typeormConfig from "./typeorm.config";
+import { DataSource } from "typeorm";
+import { createUserLoader } from "./utils/createUserLoader";
+import { createUpdootLoader } from "./utils/createUpdootLoader";
 
 export const appDataSource = new DataSource(typeormConfig);
 
@@ -67,7 +69,13 @@ const main = async () => {
       resolvers: [PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => ({ req, res, redis }),
+    context: ({ req, res }) => ({
+      req,
+      res,
+      redis,
+      userLoader: createUserLoader(),
+      updootLoader: createUpdootLoader(),
+    }),
   });
   await apolloServer.start();
   apolloServer.applyMiddleware({

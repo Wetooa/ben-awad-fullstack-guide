@@ -24,13 +24,13 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
     cursor: "",
   });
 
-  const [{ data, fetching, stale }] = usePostsQuery({ variables });
-  const [{ data: meData, fetching: meFetching }] = useMeQuery();
+  const [{ data, fetching, error, stale }] = usePostsQuery({ variables });
 
   if (!fetching && !data) {
     return (
       <Layout>
-        <div className="">you got query failed for some reason</div>;
+        <div className="">you got query failed for some reason</div>
+        <div>{error?.message}</div>
       </Layout>
     );
   }
@@ -71,15 +71,12 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
                         </Flex>
                         <Flex flexDirection={"column"} gap={3}>
                           <Text>Posted by: {p.creator.username}</Text>
-                          {meData &&
-                            !meFetching &&
-                            meData.me?.id === p.creatorId && (
-                              <EditDeletePostButtons
-                                setId={setDeletingPostId}
-                                currentPostId={deletingPostId}
-                                postId={p.id}
-                              />
-                            )}
+                          <EditDeletePostButtons
+                            postCreator={p.creatorId}
+                            setId={setDeletingPostId}
+                            currentPostId={deletingPostId}
+                            postId={p.id}
+                          />
                         </Flex>
                       </Flex>
                     </Flex>

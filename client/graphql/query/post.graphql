@@ -5,6 +5,7 @@ query Post($postId: Int!) {
     text
     points
     creatorId
+    voteStatus
     creator {
       id
       username
@@ -12,5 +13,6 @@ query Post($postId: Int!) {
     createdAt
     updatedAt
     voteStatus
+    textSnippet
   }
 }
