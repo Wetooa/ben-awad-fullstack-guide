@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { PostReply } from "./Reply";
 import { Updoot } from "./Updoot";
 import { User } from "./User";
 
@@ -54,4 +55,8 @@ export class Post extends BaseEntity {
 
   @OneToMany(() => Updoot, (updoot) => updoot.post)
   updoots!: Updoot[];
+
+  @Field(() => [PostReply])
+  @OneToMany(() => PostReply, (reply) => reply.post, { nullable: true })
+  replies!: PostReply[];
 }

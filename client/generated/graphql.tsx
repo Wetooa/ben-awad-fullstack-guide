@@ -30,6 +30,7 @@ export type Mutation = {
   login: UserResponse;
   logout: Scalars['Boolean'];
   register: UserResponse;
+  reply: ReplyResponse;
   updatePost: PostResponse;
   vote: Scalars['Boolean'];
 };
@@ -67,6 +68,13 @@ export type MutationRegisterArgs = {
 };
 
 
+export type MutationReplyArgs = {
+  postId?: InputMaybe<Scalars['Int']>;
+  replyId?: InputMaybe<Scalars['Int']>;
+  text: Scalars['String'];
+};
+
+
 export type MutationUpdatePostArgs = {
   id: Scalars['Int'];
   input: PostInput;
@@ -91,6 +99,7 @@ export type Post = {
   creatorId: Scalars['Int'];
   id: Scalars['Int'];
   points: Scalars['Int'];
+  replies: Array<PostReply>;
   text: Scalars['String'];
   textSnippet: Scalars['String'];
   title: Scalars['String'];
@@ -101,6 +110,20 @@ export type Post = {
 export type PostInput = {
   text: Scalars['String'];
   title: Scalars['String'];
+};
+
+export type PostReply = {
+  __typename?: 'PostReply';
+  createdAt: Scalars['String'];
+  creator: User;
+  creatorId: Scalars['Int'];
+  id: Scalars['Int'];
+  points: Scalars['Int'];
+  postId: Scalars['Int'];
+  replyReplies: Array<ReplyReply>;
+  text: Scalars['String'];
+  updatedAt: Scalars['String'];
+  voteStatus?: Maybe<Scalars['Int']>;
 };
 
 export type PostResponse = {
@@ -128,11 +151,31 @@ export type QueryPostsArgs = {
   limit: Scalars['Int'];
 };
 
+export type ReplyReply = {
+  __typename?: 'ReplyReply';
+  createdAt: Scalars['String'];
+  creator: User;
+  creatorId: Scalars['Int'];
+  id: Scalars['Int'];
+  points: Scalars['Int'];
+  replyId: Scalars['Int'];
+  text: Scalars['String'];
+  updatedAt: Scalars['String'];
+  voteStatus?: Maybe<Scalars['Int']>;
+};
+
+export type ReplyResponse = {
+  __typename?: 'ReplyResponse';
+  errors?: Maybe<Array<FieldError>>;
+  success?: Maybe<Scalars['Boolean']>;
+};
+
 export type User = {
   __typename?: 'User';
   createdAt: Scalars['String'];
   email: Scalars['String'];
   id: Scalars['Int'];
+  replies: Array<PostReply>;
   updatedAt: Scalars['String'];
   username: Scalars['String'];
 };
@@ -267,6 +310,21 @@ export const RegisterDocument = gql`
 export function useRegisterMutation() {
   return Urql.useMutation<RegisterMutation, RegisterMutationVariables>(RegisterDocument);
 };
+export const ReplyDocument = gql`
+    mutation Reply($text: String!, $replyId: Int, $postId: Int) {
+  reply(text: $text, replyId: $replyId, postId: $postId) {
+    errors {
+      field
+      message
+    }
+    success
+  }
+}
+    `;
+
+export function useReplyMutation() {
+  return Urql.useMutation<ReplyMutation, ReplyMutationVariables>(ReplyDocument);
+};
 export const UpdatePostDocument = gql`
     mutation UpdatePost($input: PostInput!, $updatePostId: Int!) {
   updatePost(input: $input, id: $updatePostId) {
@@ -308,21 +366,36 @@ export function useMeQuery(options?: Omit<Urql.UseQueryArgs<MeQueryVariables>, '
   return Urql.useQuery<MeQuery, MeQueryVariables>({ query: MeDocument, ...options });
 };
 export const PostDocument = gql`
-    query Post($postId: Int!) {
-  post(id: $postId) {
+    query Post($id: Int!) {
+  post(id: $id) {
     id
     title
     text
+    voteStatus
     points
     creatorId
-    voteStatus
     creator {
       id
+      email
       username
     }
     createdAt
     updatedAt
-    voteStatus
+    replies {
+      id
+      text
+      voteStatus
+      points
+      createdAt
+      updatedAt
+      creatorId
+      postId
+      creator {
+        id
+        email
+        username
+      }
+    }
     textSnippet
   }
 }
@@ -403,6 +476,15 @@ export type RegisterMutationVariables = Exact<{
 
 export type RegisterMutation = { __typename?: 'Mutation', register: { __typename?: 'UserResponse', errors?: Array<{ __typename?: 'FieldError', field: string, message: string }> | null, user?: { __typename?: 'User', id: number, username: string, email: string } | null } };
 
+export type ReplyMutationVariables = Exact<{
+  text: Scalars['String'];
+  replyId?: InputMaybe<Scalars['Int']>;
+  postId?: InputMaybe<Scalars['Int']>;
+}>;
+
+
+export type ReplyMutation = { __typename?: 'Mutation', reply: { __typename?: 'ReplyResponse', success?: boolean | null, errors?: Array<{ __typename?: 'FieldError', field: string, message: string }> | null } };
+
 export type UpdatePostMutationVariables = Exact<{
   input: PostInput;
   updatePostId: Scalars['Int'];
@@ -425,11 +507,11 @@ export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 export type MeQuery = { __typename?: 'Query', me?: { __typename?: 'User', id: number, username: string, email: string } | null };
 
 export type PostQueryVariables = Exact<{
-  postId: Scalars['Int'];
+  id: Scalars['Int'];
 }>;
 
 
-export type PostQuery = { __typename?: 'Query', post?: { __typename?: 'Post', id: number, title: string, text: string, points: number, creatorId: number, voteStatus?: number | null, createdAt: string, updatedAt: string, textSnippet: string, creator: { __typename?: 'User', id: number, username: string } } | null };
+export type PostQuery = { __typename?: 'Query', post?: { __typename?: 'Post', id: number, title: string, text: string, voteStatus?: number | null, points: number, creatorId: number, createdAt: string, updatedAt: string, textSnippet: string, creator: { __typename?: 'User', id: number, email: string, username: string }, replies: Array<{ __typename?: 'PostReply', id: number, text: string, voteStatus?: number | null, points: number, createdAt: string, updatedAt: string, creatorId: number, postId: number, creator: { __typename?: 'User', id: number, email: string, username: string } }> } | null };
 
 export type PostsQueryVariables = Exact<{
   cursor: Scalars['String'];

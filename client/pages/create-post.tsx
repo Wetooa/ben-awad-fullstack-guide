@@ -42,7 +42,7 @@ const CreatePost: React.FC<CreatePostProps> = ({}) => {
                 name="text"
                 placeholder="Text..."
                 textarea
-                label="text"
+                label="Text"
               />
             </Box>
 

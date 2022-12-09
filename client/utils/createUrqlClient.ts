@@ -116,6 +116,14 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
         },
         updates: {
           Mutation: {
+            reply: (_result, args, cache, _info) => {
+              const { postId } = args;
+              cache.invalidate({
+                __typename: "Post",
+                id: JSON.stringify(postId),
+              });
+            },
+
             updatePost: (_result, args, cache, _info) => {
               // when we update post, we remove said post and like uknow get it again
               const { id } = args;

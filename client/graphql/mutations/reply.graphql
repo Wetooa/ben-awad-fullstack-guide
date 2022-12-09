@@ -1,0 +1,9 @@
+mutation Reply($text: String!, $replyId: Int, $postId: Int) {
+  reply(text: $text, replyId: $replyId, postId: $postId) {
+    errors {
+      field
+      message
+    }
+    success
+  }
+}

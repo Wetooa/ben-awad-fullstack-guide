@@ -1,18 +1,33 @@
-query Post($postId: Int!) {
-  post(id: $postId) {
+query Post($id: Int!) {
+  post(id: $id) {
     id
     title
     text
+    voteStatus
     points
     creatorId
-    voteStatus
     creator {
       id
+      email
       username
     }
     createdAt
     updatedAt
-    voteStatus
+    replies {
+      id
+      text
+      voteStatus
+      points
+      createdAt
+      updatedAt
+      creatorId
+      postId
+      creator {
+        id
+        email
+        username
+      }
+    }
     textSnippet
   }
 }

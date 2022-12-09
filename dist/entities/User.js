@@ -13,6 +13,7 @@ exports.User = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Post_1 = require("./Post");
+const Reply_1 = require("./Reply");
 const Updoot_1 = require("./Updoot");
 let User = class User extends typeorm_1.BaseEntity {
     constructor() {
@@ -37,10 +38,6 @@ __decorate([
     __metadata("design:type", Object)
 ], User.prototype, "updatedAt", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => Post_1.Post, (post) => post.creator, { nullable: true }),
-    __metadata("design:type", Array)
-], User.prototype, "posts", void 0);
-__decorate([
     (0, type_graphql_1.Field)(() => String),
     (0, typeorm_1.Column)({ type: "text", unique: true }),
     __metadata("design:type", String)
@@ -58,6 +55,15 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => Updoot_1.Updoot, (updoot) => updoot.user),
     __metadata("design:type", Array)
 ], User.prototype, "updoots", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => Post_1.Post, (post) => post.creator, { nullable: true }),
+    __metadata("design:type", Array)
+], User.prototype, "posts", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => [Reply_1.PostReply]),
+    (0, typeorm_1.OneToMany)(() => Reply_1.PostReply, (reply) => reply.creator, { nullable: true }),
+    __metadata("design:type", Array)
+], User.prototype, "replies", void 0);
 User = __decorate([
     (0, type_graphql_1.ObjectType)(),
     (0, typeorm_1.Entity)()

@@ -17,19 +17,11 @@ import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
 import { FieldError } from "./user";
 import { appDataSource } from "../";
-import { Updoot } from "../entities/Updoot";
 import { postValidate } from "../utils/postValidate";
-import { User } from "../entities/User";
 
-// ok so resolver is where we make our commands, kinda like the controllers
-// the queries are the individual controllers
-// the syntax is as follows
-/*
-@Query(() => [TYPES])
-NAME(@Ctx() {CONTEXT_THINGY}: CONTEXT_TYPE_PROP): RETURN TYPE {
-  return CONTEXT_THINGY.smthsmth()
-}
-*/
+import { Updoot } from "../entities/Updoot";
+import { User } from "../entities/User";
+import { PostReply, ReplyReply } from "../entities/Reply";
 
 @InputType()
 export class PostInput {
@@ -50,6 +42,15 @@ class PostResponse {
 }
 
 @ObjectType()
+class ReplyResponse {
+  @Field(() => [FieldError], { nullable: true })
+  errors?: FieldError[];
+
+  @Field(() => Boolean, { nullable: true })
+  success?: boolean;
+}
+
+@ObjectType()
 class PaginatedPosts {
   @Field(() => [Post])
   posts!: Post[];
@@ -58,7 +59,6 @@ class PaginatedPosts {
   hasMore!: boolean;
 }
 
-// either limit and offset pagination or cursor based pagination
 @Resolver(Post)
 export class PostResolver {
   @FieldResolver(() => String)
@@ -68,10 +68,10 @@ export class PostResolver {
       : root.text;
   }
 
+  // data loader to optimize queries
   @FieldResolver(() => User)
-  creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
-    // data loader to optimize queries
-    return userLoader.load(post.creatorId);
+  async creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+    return await userLoader.load(post.creatorId);
   }
 
   @FieldResolver(() => Int, { nullable: true })
@@ -89,6 +89,56 @@ export class PostResolver {
     return updoot ? updoot.value : null;
   }
 
+  @FieldResolver(() => PostReply)
+  async replies(@Root() post: Post) {
+    return await PostReply.find({
+      where: { postId: post.id },
+      relations: ["creator"],
+    });
+  }
+
+  @Mutation(() => ReplyResponse)
+  @UseMiddleware(isAuth)
+  async reply(
+    @Ctx() { req }: MyContext,
+    @Arg("text", () => String) text: string,
+    @Arg("postId", () => Int, { nullable: true }) postId: number | null,
+    @Arg("replyId", () => Int, { nullable: true }) replyId: number | null
+  ): Promise<ReplyResponse> {
+    if ((!postId && !replyId) || (postId && replyId)) {
+      throw new Error("not authenticated");
+    }
+
+    if (text.length < 1) {
+      return {
+        errors: [
+          {
+            field: "text",
+            message: "text field cannot be empty",
+          },
+        ],
+      };
+    }
+
+    if (postId) {
+      await PostReply.create({
+        text,
+        creatorId: req.session.userId,
+        postId,
+      }).save();
+    } else if (replyId) {
+      await ReplyReply.create({
+        text,
+        creatorId: req.session.userId,
+        replyId,
+      }).save();
+    } else {
+      return { success: false };
+    }
+
+    return { success: true };
+  }
+
   @Query(() => PaginatedPosts)
   async posts(
     @Arg("limit", () => Int) limit: number,
@@ -99,25 +149,11 @@ export class PostResolver {
     const realLimitPlusOne = realLimit + 1;
 
     // docs says its better to use take instead of limit so we will use that lol
-    // cursor is like get the shit after that certain post
 
     const replacements: any[] = [realLimitPlusOne];
     if (cursor) {
       replacements.push(new Date(parseInt(cursor)));
     }
-
-    // query is kinda like mysql so yea it feels good what I learned didnt go to waste hahahahha
-
-    //  ${
-    //    req.session.userId
-    //      ? `
-    //   (
-    //     SELECT value
-    //     FROM updoot
-    //     WHERE "userId" = $2 and "postId" = p.id
-    //   ) "voteStatus"`
-    //      : `null as "voteStatus"`
-    //  }
 
     const posts = await userRepo.query(
       `
@@ -138,19 +174,7 @@ export class PostResolver {
 
   @Query(() => Post, { nullable: true })
   async post(@Arg("id", () => Int) id: number): Promise<Post | null> {
-    // easy way of making join statements using typeorm
-
-    // let voteStatus = null;
-    // if (req.session.userId) {
-    //   voteStatus =
-    //     (
-    //       await Updoot.findOne({
-    //         where: { userId: req.session.userId, postId: id },
-    //       })
-    //     )?.value || null;
-    // }
-    // if (post) return { ...post, voteStatus } as Post;
-    // return null;
+    console.log(await Post.find({ where: { id } }));
 
     return await Post.findOne({ where: { id } });
   }
@@ -244,8 +268,6 @@ export class PostResolver {
           );
         });
       } else {
-        // if not equal to the current value, then update the doot and add the value twice g?
-
         await appDataSource.transaction(async (tm) => {
           await tm.query(
             `
@@ -268,8 +290,6 @@ export class PostResolver {
         });
       }
     } else {
-      // not voted yet
-
       await appDataSource.transaction(async (tm) => {
         await tm.query(
           `

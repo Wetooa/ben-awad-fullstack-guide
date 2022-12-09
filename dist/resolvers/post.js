@@ -27,9 +27,10 @@ const type_graphql_1 = require("type-graphql");
 const isAuth_1 = require("../middleware/isAuth");
 const user_1 = require("./user");
 const __1 = require("../");
-const Updoot_1 = require("../entities/Updoot");
 const postValidate_1 = require("../utils/postValidate");
+const Updoot_1 = require("../entities/Updoot");
 const User_1 = require("../entities/User");
+const Reply_1 = require("../entities/Reply");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -57,6 +58,19 @@ __decorate([
 PostResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], PostResponse);
+let ReplyResponse = class ReplyResponse {
+};
+__decorate([
+    (0, type_graphql_1.Field)(() => [user_1.FieldError], { nullable: true }),
+    __metadata("design:type", Array)
+], ReplyResponse.prototype, "errors", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => Boolean, { nullable: true }),
+    __metadata("design:type", Boolean)
+], ReplyResponse.prototype, "success", void 0);
+ReplyResponse = __decorate([
+    (0, type_graphql_1.ObjectType)()
+], ReplyResponse);
 let PaginatedPosts = class PaginatedPosts {
 };
 __decorate([
@@ -77,7 +91,9 @@ let PostResolver = class PostResolver {
             : root.text;
     }
     creator(post, { userLoader }) {
-        return userLoader.load(post.creatorId);
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield userLoader.load(post.creatorId);
+        });
     }
     voteStatus(post, { updootLoader, req }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -89,6 +105,49 @@ let PostResolver = class PostResolver {
                 userId: req.session.userId,
             });
             return updoot ? updoot.value : null;
+        });
+    }
+    replies(post) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield Reply_1.PostReply.find({
+                where: { postId: post.id },
+                relations: ["creator"],
+            });
+        });
+    }
+    reply({ req }, text, postId, replyId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if ((!postId && !replyId) || (postId && replyId)) {
+                throw new Error("not authenticated");
+            }
+            if (text.length < 1) {
+                return {
+                    errors: [
+                        {
+                            field: "text",
+                            message: "text field cannot be empty",
+                        },
+                    ],
+                };
+            }
+            if (postId) {
+                yield Reply_1.PostReply.create({
+                    text,
+                    creatorId: req.session.userId,
+                    postId,
+                }).save();
+            }
+            else if (replyId) {
+                yield Reply_1.ReplyReply.create({
+                    text,
+                    creatorId: req.session.userId,
+                    replyId,
+                }).save();
+            }
+            else {
+                return { success: false };
+            }
+            return { success: true };
         });
     }
     posts(limit, cursor) {
@@ -115,6 +174,7 @@ let PostResolver = class PostResolver {
     }
     post(id) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log(yield Post_1.Post.find({ where: { id } }));
             return yield Post_1.Post.findOne({ where: { id } });
         });
     }
@@ -219,7 +279,7 @@ __decorate([
     __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Post_1.Post, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "creator", null);
 __decorate([
     (0, type_graphql_1.FieldResolver)(() => type_graphql_1.Int, { nullable: true }),
@@ -229,6 +289,24 @@ __decorate([
     __metadata("design:paramtypes", [Post_1.Post, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "voteStatus", null);
+__decorate([
+    (0, type_graphql_1.FieldResolver)(() => Reply_1.PostReply),
+    __param(0, (0, type_graphql_1.Root)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Post_1.Post]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "replies", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => ReplyResponse),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __param(1, (0, type_graphql_1.Arg)("text", () => String)),
+    __param(2, (0, type_graphql_1.Arg)("postId", () => type_graphql_1.Int, { nullable: true })),
+    __param(3, (0, type_graphql_1.Arg)("replyId", () => type_graphql_1.Int, { nullable: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "reply", null);
 __decorate([
     (0, type_graphql_1.Query)(() => PaginatedPosts),
     __param(0, (0, type_graphql_1.Arg)("limit", () => type_graphql_1.Int)),
