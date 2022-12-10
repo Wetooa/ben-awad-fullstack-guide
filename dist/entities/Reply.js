@@ -13,6 +13,7 @@ exports.ReplyReply = exports.PostReply = exports.Reply = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Post_1 = require("./Post");
+const Updoot_1 = require("./Updoot");
 const User_1 = require("./User");
 let Reply = class Reply extends typeorm_1.BaseEntity {
     constructor() {
@@ -80,6 +81,11 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => ReplyReply, (reply) => reply.reply),
     __metadata("design:type", Array)
 ], PostReply.prototype, "replyReplies", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => Updoot_1.Updoot),
+    (0, typeorm_1.OneToMany)(() => Updoot_1.Updoot, (updoot) => updoot.postReply),
+    __metadata("design:type", Array)
+], PostReply.prototype, "updoot", void 0);
 PostReply = __decorate([
     (0, type_graphql_1.ObjectType)(),
     (0, typeorm_1.Entity)()

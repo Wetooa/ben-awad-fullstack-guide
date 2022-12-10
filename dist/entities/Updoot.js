@@ -40,6 +40,7 @@ __decorate([
     (0, type_graphql_1.Field)(() => Post_1.Post),
     (0, typeorm_1.ManyToMany)(() => Post_1.Post, (post) => post.updoots, {
         onDelete: "CASCADE",
+        nullable: true,
     }),
     __metadata("design:type", Post_1.Post)
 ], Updoot.prototype, "post", void 0);

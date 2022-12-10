@@ -9,7 +9,6 @@ import {
   OneToMany,
 } from "typeorm";
 import { Post } from "./Post";
-import { PostReply } from "./Reply";
 import { Updoot } from "./Updoot";
 
 // adding @field makes it so that u can access the property
@@ -45,8 +44,4 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Post, (post) => post.creator, { nullable: true })
   posts!: Post[];
-
-  @Field(() => [PostReply])
-  @OneToMany(() => PostReply, (reply) => reply.creator, { nullable: true })
-  replies!: PostReply[];
 }

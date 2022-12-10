@@ -117,10 +117,10 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
         updates: {
           Mutation: {
             reply: (_result, args, cache, _info) => {
-              const { postId } = args;
+              const { replyId } = args;
               cache.invalidate({
                 __typename: "Post",
-                id: JSON.stringify(postId),
+                id: JSON.stringify(replyId),
               });
             },
 

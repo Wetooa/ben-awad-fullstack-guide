@@ -1,8 +1,7 @@
-mutation Reply($text: String!, $replyId: Int, $postId: Int) {
-  reply(text: $text, replyId: $replyId, postId: $postId) {
+mutation Reply($replyId: Int!, $text: String!) {
+  reply(replyId: $replyId, text: $text) {
     errors {
-      field
-      message
+      ...RegularError
     }
     success
   }

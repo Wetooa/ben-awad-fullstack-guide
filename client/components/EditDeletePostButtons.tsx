@@ -1,38 +1,39 @@
 import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
 import { Box, IconButton } from "@chakra-ui/react";
 import router from "next/router";
-import React from "react";
-import { useDeletePostMutation, useMeQuery } from "../generated/graphql";
+import React, { useState } from "react";
+import {
+  PostSnippetFragment,
+  useDeletePostMutation,
+  useMeQuery,
+} from "../generated/graphql";
 
 interface EditDeletePostButtonsProps {
-  postId: number;
-  postCreator: number;
-  setId?: (value: number) => void;
-  currentPostId?: number;
+  post: PostSnippetFragment;
+  insidePost?: boolean | null;
 }
 
 const EditDeletePostButtons: React.FC<EditDeletePostButtonsProps> = ({
-  postId,
-  postCreator,
-  setId,
-  currentPostId,
+  post,
+  insidePost,
 }) => {
-  const [{ fetching: deleteFetching }, deletePost] = useDeletePostMutation();
+  const [{}, deletePost] = useDeletePostMutation();
   const [{ data: meData }] = useMeQuery();
+  const [isLoading, setIsLoading] = useState(false);
 
   return (
     <Box display={"inline"} m={0}>
-      {meData?.me?.id === postCreator && (
+      {post && meData?.me?.id === post.creator.id && (
         <>
           <IconButton
-            isLoading={deleteFetching && postId === currentPostId}
+            isLoading={isLoading}
             mr={2}
             aria-label="Delete"
             onClick={async () => {
-              if (setId) setId(postId);
-              await deletePost({ deletePostId: postId });
-              if (setId) setId(-1);
-              router.push("/");
+              setIsLoading(true);
+              await deletePost({ deletePostId: post.id });
+              setIsLoading(false);
+              if (!insidePost) router.push("/");
             }}
           >
             <DeleteIcon />
@@ -41,7 +42,7 @@ const EditDeletePostButtons: React.FC<EditDeletePostButtonsProps> = ({
           <IconButton
             aria-label="Update"
             onClick={() => {
-              router.push(`post/edit/${postId}`);
+              router.push(`post/edit/${post.id}`);
             }}
           >
             <EditIcon />

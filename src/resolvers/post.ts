@@ -21,7 +21,6 @@ import { postValidate } from "../utils/postValidate";
 
 import { Updoot } from "../entities/Updoot";
 import { User } from "../entities/User";
-import { PostReply, ReplyReply } from "../entities/Reply";
 
 @InputType()
 export class PostInput {
@@ -89,53 +88,40 @@ export class PostResolver {
     return updoot ? updoot.value : null;
   }
 
-  @FieldResolver(() => PostReply)
-  async replies(@Root() post: Post) {
-    return await PostReply.find({
-      where: { postId: post.id },
-      relations: ["creator"],
-    });
-  }
-
   @Mutation(() => ReplyResponse)
   @UseMiddleware(isAuth)
   async reply(
     @Ctx() { req }: MyContext,
     @Arg("text", () => String) text: string,
-    @Arg("postId", () => Int, { nullable: true }) postId: number | null,
-    @Arg("replyId", () => Int, { nullable: true }) replyId: number | null
+    @Arg("replyId", () => Int) replyId: number
   ): Promise<ReplyResponse> {
-    if ((!postId && !replyId) || (postId && replyId)) {
-      throw new Error("not authenticated");
+    if (!replyId) {
+      return { success: false };
     }
-
-    if (text.length < 1) {
+    if (text.length < 3) {
       return {
         errors: [
           {
             field: "text",
-            message: "text field cannot be empty",
+            message: "text field must be longer than 3 characters",
           },
         ],
       };
     }
 
-    if (postId) {
-      await PostReply.create({
-        text,
-        creatorId: req.session.userId,
-        postId,
-      }).save();
-    } else if (replyId) {
-      await ReplyReply.create({
-        text,
-        creatorId: req.session.userId,
-        replyId,
-      }).save();
-    } else {
+    const post = await Post.findOne({ where: { id: replyId } });
+    if (!post) {
       return { success: false };
     }
 
+    const reply = await Post.create({
+      text,
+      replyId,
+      creatorId: req.session.userId,
+    });
+
+    reply.repliedToPost = post;
+    await appDataSource.manager.save(reply);
     return { success: true };
   }
 
@@ -148,8 +134,6 @@ export class PostResolver {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
 
-    // docs says its better to use take instead of limit so we will use that lol
-
     const replacements: any[] = [realLimitPlusOne];
     if (cursor) {
       replacements.push(new Date(parseInt(cursor)));
@@ -159,7 +143,8 @@ export class PostResolver {
       `
       SELECT p.*
       FROM post p
-      ${cursor && `WHERE p."createdAt" < $2`}
+      WHERE p."replyId" IS NULL
+      ${cursor && `AND p."createdAt" < $2`}
       ORDER BY p."createdAt" DESC
       LIMIT $1
     `,
@@ -173,10 +158,24 @@ export class PostResolver {
   }
 
   @Query(() => Post, { nullable: true })
-  async post(@Arg("id", () => Int) id: number): Promise<Post | null> {
-    console.log(await Post.find({ where: { id } }));
+  async post(@Arg("id", () => Int) id: number): Promise<any | null> {
+    const parent = await Post.findOne({ where: { id } });
+    if (!parent) {
+      throw new Error("query failed");
+    }
 
-    return await Post.findOne({ where: { id } });
+    // console.log(
+    //   await appDataSource
+    //     .getTreeRepository(Post)
+    //     .createDescendantsQueryBuilder("category", "categoryClosure", parent)
+    //     // .andWhere("category = 'secondary'")
+    //     .orderBy('category."createdAt"', "DESC")
+    //     .getMany()
+    // );
+
+    return await appDataSource
+      .getTreeRepository(Post)
+      .findDescendantsTree(parent);
   }
 
   @Mutation(() => PostResponse)

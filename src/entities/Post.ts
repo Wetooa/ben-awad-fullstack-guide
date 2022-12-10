@@ -7,9 +7,11 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  Tree,
+  TreeChildren,
+  TreeParent,
   UpdateDateColumn,
 } from "typeorm";
-import { PostReply } from "./Reply";
 import { Updoot } from "./Updoot";
 import { User } from "./User";
 
@@ -17,13 +19,14 @@ import { User } from "./User";
 
 @ObjectType()
 @Entity()
+@Tree("nested-set")
 export class Post extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Field(() => String)
-  @Column({ type: "text" })
+  @Field(() => String, { nullable: true })
+  @Column({ type: "text", nullable: true })
   title!: string;
 
   @Field(() => String)
@@ -56,7 +59,15 @@ export class Post extends BaseEntity {
   @OneToMany(() => Updoot, (updoot) => updoot.post)
   updoots!: Updoot[];
 
-  @Field(() => [PostReply])
-  @OneToMany(() => PostReply, (reply) => reply.post, { nullable: true })
-  replies!: PostReply[];
+  @Field(() => Int, { nullable: true })
+  @Column({ type: "int", nullable: true })
+  replyId!: number;
+
+  @Field(() => Post)
+  @TreeParent({ onDelete: "CASCADE" })
+  repliedToPost!: Post;
+
+  @Field(() => [Post])
+  @TreeChildren()
+  replies!: Post[];
 }

@@ -17,12 +17,14 @@ type InputFieldProps = InputHTMLAttributes<
   name: string;
   label: string;
   textarea?: boolean;
+  height?: number;
 };
 
 const InputField: React.FC<InputFieldProps> = ({
   label,
   size: _,
   textarea,
+  height,
   ...props
 }) => {
   const [field, { error }] = useField(props);
@@ -43,7 +45,7 @@ const InputField: React.FC<InputFieldProps> = ({
         {...props}
         id={field.name}
         autoComplete="on"
-        height={textarea ? "48" : "12"}
+        height={textarea ? height || "48" : "12"}
       />
 
       {error ? <FormErrorMessage>{error}</FormErrorMessage> : null}

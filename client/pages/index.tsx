@@ -71,12 +71,7 @@ export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
                         </Flex>
                         <Flex flexDirection={"column"} gap={3}>
                           <Text>Posted by: {p.creator.username}</Text>
-                          <EditDeletePostButtons
-                            postCreator={p.creatorId}
-                            setId={setDeletingPostId}
-                            currentPostId={deletingPostId}
-                            postId={p.id}
-                          />
+                          <EditDeletePostButtons post={p} />
                         </Flex>
                       </Flex>
                     </Flex>

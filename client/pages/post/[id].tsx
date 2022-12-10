@@ -67,24 +67,20 @@ const Post: React.FC<PostProps> = ({}) => {
               <Text>Posted by: {data.post.creator.username}</Text>
             </Flex>
             <Box display={"inline-flex"} w={"auto"} mr={2}>
-              <EditDeletePostButtons
-                postId={data.post.id}
-                postCreator={data.post.creatorId}
-              />
+              <EditDeletePostButtons post={data.post} />
             </Box>
           </Flex>
           <Text mt={4}>{data.post.text}</Text>
         </Box>
       </Flex>
 
-      <Flex mt={4}>
+      <Box m={4} mb={20}>
         <Formik
           initialValues={{ text: "" }}
           onSubmit={async (values, { setErrors, resetForm }) => {
             const response = await reply({
               ...values,
-              postId: data.post?.id,
-              replyId: null,
+              replyId: data.post!.id,
             });
 
             console.log(response);
@@ -92,36 +88,54 @@ const Post: React.FC<PostProps> = ({}) => {
             if (response.data?.reply.errors) {
               setErrors(toErrorMap(response.data.reply.errors));
             } else {
-              resetForm({ values: "" });
+              resetForm();
             }
           }}
         >
-          {({ isSubmitting }) => (
+          {({ isSubmitting, resetForm }) => (
             <Form>
-              <InputField
-                name="text"
-                placeholder="Text..."
-                textarea
-                label="Reply to this post"
-              />
-
               <Box>
-                <Button
-                  isLoading={isSubmitting}
-                  mt={4}
-                  type="submit"
-                  colorScheme="teal"
-                  variant="solid"
-                >
-                  Reply
-                </Button>
+                <InputField
+                  name="text"
+                  placeholder="Text..."
+                  textarea
+                  label="Reply to this post"
+                  height={18}
+                />
+
+                <Box float={"right"}>
+                  <Button
+                    isLoading={isSubmitting}
+                    mt={4}
+                    type="submit"
+                    colorScheme="teal"
+                    variant="solid"
+                  >
+                    Reply
+                  </Button>
+                </Box>
+
+                <Box float={"right"}>
+                  <Button
+                    mt={4}
+                    mr={4}
+                    colorScheme="red"
+                    variant="solid"
+                    onClick={() => resetForm()}
+                  >
+                    Clear
+                  </Button>
+                </Box>
               </Box>
             </Form>
           )}
         </Formik>
-      </Flex>
+      </Box>
 
-      {data.post.replies.length > 0 && (
+      <Heading p={2} ml={2} borderBottom={"2px solid gray"}>
+        Replies
+      </Heading>
+      <Box>
         <Flex
           mt={4}
           flexDirection={"column"}
@@ -133,16 +147,37 @@ const Post: React.FC<PostProps> = ({}) => {
           alignContent={"top"}
           alignItems={"start"}
         >
-          {data.post.replies.map((r) => {
-            return (
-              <Box key={r.id} borderTop={"1px solid gray"} width={"100%"} p={2}>
-                <Heading size={"lg"}>{r.creator.username}</Heading>
-                <Text>{r.text}</Text>
-              </Box>
-            );
-          })}
+          {data.post?.replies.length == 0 ? (
+            <Box>
+              <Heading>No replies to show as of now</Heading>
+              <Text>Reply!!!!</Text>
+            </Box>
+          ) : (
+            <Box width={"100%"}>
+              {data.post.replies.map((r) => {
+                return (
+                  <Flex
+                    key={r.id}
+                    borderTop={"1px solid gray"}
+                    p={4}
+                    gap={6}
+                    alignItems={"center"}
+                  >
+                    <UpdootSection post={r} />
+                    <Flex flexDirection={"column"}>
+                      <Heading size={"md"}>{r.creator.username}</Heading>
+                      <Text mt={1}>{r.text}</Text>
+                    </Flex>
+                    <Box ml={"auto"}>
+                      <EditDeletePostButtons post={r} insidePost />
+                    </Box>
+                  </Flex>
+                );
+              })}
+            </Box>
+          )}
         </Flex>
-      )}
+      </Box>
     </Layout>
   );
 };

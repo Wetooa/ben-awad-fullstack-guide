@@ -30,7 +30,6 @@ const __1 = require("../");
 const postValidate_1 = require("../utils/postValidate");
 const Updoot_1 = require("../entities/Updoot");
 const User_1 = require("../entities/User");
-const Reply_1 = require("../entities/Reply");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -107,46 +106,32 @@ let PostResolver = class PostResolver {
             return updoot ? updoot.value : null;
         });
     }
-    replies(post) {
+    reply({ req }, text, replyId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield Reply_1.PostReply.find({
-                where: { postId: post.id },
-                relations: ["creator"],
-            });
-        });
-    }
-    reply({ req }, text, postId, replyId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if ((!postId && !replyId) || (postId && replyId)) {
-                throw new Error("not authenticated");
+            if (!replyId) {
+                return { success: false };
             }
-            if (text.length < 1) {
+            if (text.length < 3) {
                 return {
                     errors: [
                         {
                             field: "text",
-                            message: "text field cannot be empty",
+                            message: "text field must be longer than 3 characters",
                         },
                     ],
                 };
             }
-            if (postId) {
-                yield Reply_1.PostReply.create({
-                    text,
-                    creatorId: req.session.userId,
-                    postId,
-                }).save();
-            }
-            else if (replyId) {
-                yield Reply_1.ReplyReply.create({
-                    text,
-                    creatorId: req.session.userId,
-                    replyId,
-                }).save();
-            }
-            else {
+            const post = yield Post_1.Post.findOne({ where: { id: replyId } });
+            if (!post) {
                 return { success: false };
             }
+            const reply = yield Post_1.Post.create({
+                text,
+                replyId,
+                creatorId: req.session.userId,
+            });
+            reply.repliedToPost = post;
+            yield __1.appDataSource.manager.save(reply);
             return { success: true };
         });
     }
@@ -162,7 +147,8 @@ let PostResolver = class PostResolver {
             const posts = yield userRepo.query(`
       SELECT p.*
       FROM post p
-      ${cursor && `WHERE p."createdAt" < $2`}
+      WHERE p."replyId" IS NULL
+      ${cursor && `AND p."createdAt" < $2`}
       ORDER BY p."createdAt" DESC
       LIMIT $1
     `, replacements);
@@ -174,8 +160,13 @@ let PostResolver = class PostResolver {
     }
     post(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log(yield Post_1.Post.find({ where: { id } }));
-            return yield Post_1.Post.findOne({ where: { id } });
+            const parent = yield Post_1.Post.findOne({ where: { id } });
+            if (!parent) {
+                throw new Error("query failed");
+            }
+            return yield __1.appDataSource
+                .getTreeRepository(Post_1.Post)
+                .findDescendantsTree(parent);
         });
     }
     createPost(input, { req }) {
@@ -290,21 +281,13 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "voteStatus", null);
 __decorate([
-    (0, type_graphql_1.FieldResolver)(() => Reply_1.PostReply),
-    __param(0, (0, type_graphql_1.Root)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Post_1.Post]),
-    __metadata("design:returntype", Promise)
-], PostResolver.prototype, "replies", null);
-__decorate([
     (0, type_graphql_1.Mutation)(() => ReplyResponse),
     (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
     __param(0, (0, type_graphql_1.Ctx)()),
     __param(1, (0, type_graphql_1.Arg)("text", () => String)),
-    __param(2, (0, type_graphql_1.Arg)("postId", () => type_graphql_1.Int, { nullable: true })),
-    __param(3, (0, type_graphql_1.Arg)("replyId", () => type_graphql_1.Int, { nullable: true })),
+    __param(2, (0, type_graphql_1.Arg)("replyId", () => type_graphql_1.Int)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Object, Object]),
+    __metadata("design:paramtypes", [Object, String, Number]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "reply", null);
 __decorate([

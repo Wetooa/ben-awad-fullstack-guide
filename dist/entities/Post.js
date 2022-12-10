@@ -8,14 +8,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var Post_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Post = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
-const Reply_1 = require("./Reply");
 const Updoot_1 = require("./Updoot");
 const User_1 = require("./User");
-let Post = class Post extends typeorm_1.BaseEntity {
+let Post = Post_1 = class Post extends typeorm_1.BaseEntity {
     constructor() {
         super(...arguments);
         this.createdAt = new Date();
@@ -28,8 +28,8 @@ __decorate([
     __metadata("design:type", Number)
 ], Post.prototype, "id", void 0);
 __decorate([
-    (0, type_graphql_1.Field)(() => String),
-    (0, typeorm_1.Column)({ type: "text" }),
+    (0, type_graphql_1.Field)(() => String, { nullable: true }),
+    (0, typeorm_1.Column)({ type: "text", nullable: true }),
     __metadata("design:type", String)
 ], Post.prototype, "title", void 0);
 __decorate([
@@ -71,13 +71,24 @@ __decorate([
     __metadata("design:type", Array)
 ], Post.prototype, "updoots", void 0);
 __decorate([
-    (0, type_graphql_1.Field)(() => [Reply_1.PostReply]),
-    (0, typeorm_1.OneToMany)(() => Reply_1.PostReply, (reply) => reply.post, { nullable: true }),
+    (0, type_graphql_1.Field)(() => type_graphql_1.Int, { nullable: true }),
+    (0, typeorm_1.Column)({ type: "int", nullable: true }),
+    __metadata("design:type", Number)
+], Post.prototype, "replyId", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => Post_1),
+    (0, typeorm_1.TreeParent)({ onDelete: "CASCADE" }),
+    __metadata("design:type", Post)
+], Post.prototype, "repliedToPost", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => [Post_1]),
+    (0, typeorm_1.TreeChildren)(),
     __metadata("design:type", Array)
 ], Post.prototype, "replies", void 0);
-Post = __decorate([
+Post = Post_1 = __decorate([
     (0, type_graphql_1.ObjectType)(),
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)(),
+    (0, typeorm_1.Tree)("nested-set")
 ], Post);
 exports.Post = Post;
 //# sourceMappingURL=Post.js.map
