@@ -36,8 +36,10 @@ NAME(@Ctx() {CONTEXT_THINGY}: CONTEXT_TYPE_PROP): RETURN TYPE {
 export class UsernamePasswordInput {
   @Field(() => String)
   username!: string;
+
   @Field(() => String, { nullable: true })
   email!: string;
+
   @Field(() => String)
   password!: string;
 }

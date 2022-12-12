@@ -52,8 +52,8 @@ const main = async () => {
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
         httpOnly: false,
-        secure: false, // cookie only works in https
-        sameSite: "lax", // csrf
+        secure: true, // cookie only works in https
+        sameSite: "none", // csrf
 
         // noticed smth, when using apollo server, use sameSite: "none" and secure: true, else, do sameSite: "lax" and secure: false
       },

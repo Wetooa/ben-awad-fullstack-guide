@@ -1,6 +1,7 @@
 import { Field, Int, ObjectType } from "type-graphql";
 import { BaseEntity, Column, Entity, ManyToMany, PrimaryColumn } from "typeorm";
 import { Post } from "./Post";
+import { Reply } from "./Reply";
 import { User } from "./User";
 
 // so ngl this looks like a mongoose schema so thats good
@@ -14,8 +15,7 @@ import { User } from "./User";
 // the user and post entities have a many to one relationship with this entity since one user can have multiple updoots and one post can have multiple updoots
 
 @ObjectType()
-@Entity()
-export class Updoot extends BaseEntity {
+class Updoot extends BaseEntity {
   @Field(() => Int)
   @Column({ type: "int" })
   value!: number;
@@ -27,7 +27,11 @@ export class Updoot extends BaseEntity {
   @Field(() => User)
   @ManyToMany(() => User, (user) => user.updoots)
   user!: User;
+}
 
+@ObjectType()
+@Entity()
+export class PostUpdoot extends Updoot {
   @Field(() => Int)
   @PrimaryColumn()
   postId!: number;
@@ -38,4 +42,19 @@ export class Updoot extends BaseEntity {
     nullable: true,
   })
   post!: Post;
+}
+
+@ObjectType()
+@Entity()
+export class ReplyUpdoot extends Updoot {
+  @Field(() => Int)
+  @PrimaryColumn()
+  replyId!: number;
+
+  @Field(() => Reply)
+  @ManyToMany(() => Reply, (reply) => reply.updoots, {
+    onDelete: "CASCADE",
+    nullable: true,
+  })
+  reply!: Post;
 }

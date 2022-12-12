@@ -1,5 +1,5 @@
 import DataLoader from "dataloader";
-import { Updoot } from "../entities/Updoot";
+import { PostUpdoot } from "../entities/Updoot";
 
 // check this out for ts shit later
 

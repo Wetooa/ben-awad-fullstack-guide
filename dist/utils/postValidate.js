@@ -6,13 +6,13 @@ const postValidate = (input) => {
     if (input.title.length < 2) {
         errors.push({
             field: "title",
-            message: "Title field cannot be empty!",
+            message: "Title field cannot be less than 2 characters!",
         });
     }
     if (input.text.length < 2) {
         errors.push({
             field: "text",
-            message: "Text field cannot be empty!",
+            message: "Text field cannot be less than 2 characters!",
         });
     }
     return errors;

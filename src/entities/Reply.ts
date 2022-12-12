@@ -1,30 +1,29 @@
-import { Field, Int, ObjectType } from "type-graphql";
+import { ObjectType, Field, Int } from "type-graphql";
 import {
-  BaseEntity,
-  Column,
-  CreateDateColumn,
   Entity,
-  ManyToOne,
-  OneToMany,
+  BaseEntity,
   PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
+  Tree,
+  TreeChildren,
+  TreeParent,
+  OneToOne,
 } from "typeorm";
-import { Reply } from "./Reply";
-import { PostUpdoot } from "./Updoot";
+import { Post } from "./Post";
+import { PostUpdoot, ReplyUpdoot } from "./Updoot";
 import { User } from "./User";
-
-// so ngl this looks like a mongoose schema so thats good
 
 @ObjectType()
 @Entity()
-export class Post extends BaseEntity {
+@Tree("closure-table")
+export class Reply extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
   id!: number;
-
-  @Field(() => String)
-  @Column({ type: "text" })
-  title!: string;
 
   @Field(() => String)
   @Column({ type: "text" })
@@ -53,9 +52,22 @@ export class Post extends BaseEntity {
   @UpdateDateColumn({ type: "timestamptz" })
   updatedAt = new Date();
 
-  @OneToMany(() => PostUpdoot, (updoot) => updoot.post)
+  @OneToMany(() => ReplyUpdoot, (updoot) => updoot.reply)
   updoots!: PostUpdoot[];
 
-  @OneToMany(() => Reply, (reply) => reply.post)
+  @Field(() => Int)
+  @Column({ type: "int", nullable: true })
+  postRepliedToId!: number;
+
+  @Field(() => Post)
+  @OneToOne(() => Post, (post) => post.replies, { nullable: true })
+  post!: Post;
+
+  @Field(() => Reply)
+  @TreeChildren()
   replies!: Reply[];
+
+  @Field(() => Reply)
+  @TreeParent()
+  repliedTo!: Reply;
 }

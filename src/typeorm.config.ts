@@ -1,7 +1,8 @@
 import path from "path";
 import { DataSourceOptions } from "typeorm";
 import { Post } from "./entities/Post";
-import { Updoot } from "./entities/Updoot";
+import { Reply } from "./entities/Reply";
+import { PostUpdoot, ReplyUpdoot } from "./entities/Updoot";
 import { User } from "./entities/User";
 
 export default {
@@ -11,6 +12,6 @@ export default {
   password: "postgres",
   logging: true,
   synchronize: true,
-  entities: [Post, User, Updoot],
+  entities: [Post, User, PostUpdoot, ReplyUpdoot, Reply],
   migrations: [path.join(__dirname, "./migrations/**/*")],
 } as DataSourceOptions;
