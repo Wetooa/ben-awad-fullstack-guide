@@ -175,6 +175,12 @@ export class PostResolver {
     if (!parent) {
       throw new Error("query failed");
     }
+
+    console.log(
+      await appDataSource.getTreeRepository(Reply).findDescendantsTree(parent, {
+        order: [{ property: "createdAt", director: "ASC" }],
+      })
+    );
   }
 
   @Mutation(() => PostResponse)
