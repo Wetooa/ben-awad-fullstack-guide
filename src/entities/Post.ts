@@ -7,23 +7,26 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  Tree,
+  TreeChildren,
+  TreeParent,
   UpdateDateColumn,
 } from "typeorm";
-import { Reply } from "./Reply";
-import { PostUpdoot } from "./Updoot";
+import { Updoot } from "./Updoot";
 import { User } from "./User";
 
 // so ngl this looks like a mongoose schema so thats good
 
 @ObjectType()
 @Entity()
+@Tree("closure-table")
 export class Post extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Field(() => String)
-  @Column({ type: "text" })
+  @Field(() => String, { nullable: true })
+  @Column({ type: "text", nullable: true })
   title!: string;
 
   @Field(() => String)
@@ -53,9 +56,18 @@ export class Post extends BaseEntity {
   @UpdateDateColumn({ type: "timestamptz" })
   updatedAt = new Date();
 
-  @OneToMany(() => PostUpdoot, (updoot) => updoot.post)
-  updoots!: PostUpdoot[];
+  @OneToMany(() => Updoot, (updoot) => updoot.post)
+  updoots!: Updoot[];
 
-  @OneToMany(() => Reply, (reply) => reply.post)
-  replies!: Reply[];
+  @Field(() => Int, { nullable: true })
+  @Column({ type: "int", nullable: true })
+  replyId?: number;
+
+  @Field(() => [Post], { nullable: true })
+  @TreeChildren()
+  replies?: Post[];
+
+  @Field(() => Post, { nullable: true })
+  @TreeParent()
+  repliedTo?: Post;
 }

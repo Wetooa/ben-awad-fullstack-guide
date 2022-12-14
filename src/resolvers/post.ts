@@ -18,10 +18,8 @@ import { isAuth } from "../middleware/isAuth";
 import { FieldError } from "./user";
 import { appDataSource } from "../";
 import { postValidate } from "../utils/postValidate";
-
-import { PostUpdoot } from "../entities/Updoot";
+import { Updoot } from "../entities/Updoot";
 import { User } from "../entities/User";
-import { Reply } from "../entities/Reply";
 
 @InputType()
 export class PostInput {
@@ -94,7 +92,6 @@ export class PostResolver {
   async reply(
     @Ctx() { req }: MyContext,
     @Arg("text", () => String) text: string,
-    @Arg("isDirectReply", () => Boolean) isDirectReply: boolean,
     @Arg("replyId", () => Int) replyId: number
   ): Promise<ReplyResponse> {
     if (!replyId) {
@@ -111,29 +108,18 @@ export class PostResolver {
       };
     }
 
-    const newReply = Reply.create({ text, creatorId: req.session.userId });
-
-    if (isDirectReply) {
-      let post = await Post.findOne({ where: { id: replyId } });
-      if (!post) {
-        return { success: false };
-      }
-
-      newReply.postRepliedToId = post.id;
-      await Reply.create({
-        text,
-        creatorId: req.session.userId,
-        postRepliedToId: post.id,
-      }).save();
-    } else {
-      let replyParent = await Reply.findOne({ where: { id: replyId } });
-      if (!replyParent) {
-        return { success: false };
-      }
-
-      newReply.repliedTo = replyParent;
-      await appDataSource.manager.save(newReply);
+    const post = await Post.findOne({ where: { id: replyId } });
+    if (!post) {
+      return { success: false };
     }
+
+    const newReply = Post.create({
+      text,
+      creatorId: req.session.userId,
+      replyId,
+    });
+    newReply.repliedTo = post;
+    await appDataSource.manager.save(newReply);
 
     return { success: true };
   }
@@ -156,6 +142,7 @@ export class PostResolver {
       `
       SELECT p.*
       FROM post p
+      WHERE p."replyId" IS NULL
       ${cursor && `AND p."createdAt" < $2`}
       ORDER BY p."createdAt" DESC
       LIMIT $1
@@ -176,11 +163,9 @@ export class PostResolver {
       throw new Error("query failed");
     }
 
-    console.log(
-      await appDataSource.getTreeRepository(Reply).findDescendantsTree(parent, {
-        order: [{ property: "createdAt", director: "ASC" }],
-      })
-    );
+    return await appDataSource
+      .getTreeRepository(Post)
+      .findDescendantsTree(parent);
   }
 
   @Mutation(() => PostResponse)
@@ -247,7 +232,7 @@ export class PostResolver {
     const realValue = isUpdoot ? 1 : -1;
     const { userId } = req.session;
 
-    const updoot = await PostUpdoot.findOne({ where: { userId, postId } });
+    const updoot = await Updoot.findOne({ where: { userId, postId } });
 
     if (updoot) {
       if (updoot.value === realValue) {

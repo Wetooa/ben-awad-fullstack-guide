@@ -34,6 +34,7 @@ query Post($postId: Int!) {
       createdAt
       updatedAt
       replyId
+      textSnippet
       replies {
         id
         title
@@ -41,12 +42,42 @@ query Post($postId: Int!) {
         voteStatus
         points
         creatorId
+        creator {
+          id
+          createdAt
+          updatedAt
+          email
+          username
+        }
         createdAt
         updatedAt
         replyId
+        replies {
+          id
+          title
+          text
+          voteStatus
+          points
+          creatorId
+          createdAt
+          updatedAt
+          replyId
+          textSnippet
+        }
+        repliedTo {
+          id
+          title
+          text
+          voteStatus
+          points
+          creatorId
+          createdAt
+          updatedAt
+          replyId
+          textSnippet
+        }
         textSnippet
       }
-      textSnippet
     }
   }
 }

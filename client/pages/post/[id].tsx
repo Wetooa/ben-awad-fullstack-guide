@@ -6,6 +6,7 @@ import EditDeletePostButtons from "../../components/EditDeletePostButtons";
 import InputField from "../../components/InputField";
 import Layout from "../../components/Layout";
 import Loading from "../../components/Loading";
+import Replies from "../../components/Replies";
 import UpdootSection from "../../components/UpdootSection";
 import { useReplyMutation } from "../../generated/graphql";
 import { createUrqlClient } from "../../utils/createUrqlClient";
@@ -147,34 +148,13 @@ const Post: React.FC<PostProps> = ({}) => {
           alignContent={"top"}
           alignItems={"start"}
         >
-          {data.post?.replies.length == 0 ? (
+          {!data.post.replies ? (
             <Box>
               <Heading>No replies to show as of now</Heading>
               <Text>Reply!!!!</Text>
             </Box>
           ) : (
-            <Box width={"100%"}>
-              {data.post.replies.map((r) => {
-                return (
-                  <Flex
-                    key={r.id}
-                    borderTop={"1px solid gray"}
-                    p={4}
-                    gap={6}
-                    alignItems={"center"}
-                  >
-                    <UpdootSection post={r} />
-                    <Flex flexDirection={"column"}>
-                      <Heading size={"md"}>{r.creator.username}</Heading>
-                      <Text mt={1}>{r.text}</Text>
-                    </Flex>
-                    <Box ml={"auto"}>
-                      <EditDeletePostButtons post={r} insidePost />
-                    </Box>
-                  </Flex>
-                );
-              })}
-            </Box>
+            <Box width={"100%"}>{<Replies post={data.post as any} />}</Box>
           )}
         </Flex>
       </Box>

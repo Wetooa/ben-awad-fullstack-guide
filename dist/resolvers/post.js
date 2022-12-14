@@ -30,7 +30,6 @@ const __1 = require("../");
 const postValidate_1 = require("../utils/postValidate");
 const Updoot_1 = require("../entities/Updoot");
 const User_1 = require("../entities/User");
-const Reply_1 = require("../entities/Reply");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -107,7 +106,7 @@ let PostResolver = class PostResolver {
             return updoot ? updoot.value : null;
         });
     }
-    reply({ req }, text, isDirectReply, replyId) {
+    reply({ req }, text, replyId) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!replyId) {
                 return { success: false };
@@ -122,27 +121,17 @@ let PostResolver = class PostResolver {
                     ],
                 };
             }
-            const newReply = Reply_1.Reply.create({ text, creatorId: req.session.userId });
-            if (isDirectReply) {
-                let post = yield Post_1.Post.findOne({ where: { id: replyId } });
-                if (!post) {
-                    return { success: false };
-                }
-                newReply.postRepliedToId = post.id;
-                yield Reply_1.Reply.create({
-                    text,
-                    creatorId: req.session.userId,
-                    postRepliedToId: post.id,
-                }).save();
+            const post = yield Post_1.Post.findOne({ where: { id: replyId } });
+            if (!post) {
+                return { success: false };
             }
-            else {
-                let replyParent = yield Reply_1.Reply.findOne({ where: { id: replyId } });
-                if (!replyParent) {
-                    return { success: false };
-                }
-                newReply.repliedTo = replyParent;
-                yield __1.appDataSource.manager.save(newReply);
-            }
+            const newReply = Post_1.Post.create({
+                text,
+                creatorId: req.session.userId,
+                replyId,
+            });
+            newReply.repliedTo = post;
+            yield __1.appDataSource.manager.save(newReply);
             return { success: true };
         });
     }
@@ -158,6 +147,7 @@ let PostResolver = class PostResolver {
             const posts = yield userRepo.query(`
       SELECT p.*
       FROM post p
+      WHERE p."replyId" IS NULL
       ${cursor && `AND p."createdAt" < $2`}
       ORDER BY p."createdAt" DESC
       LIMIT $1
@@ -174,6 +164,9 @@ let PostResolver = class PostResolver {
             if (!parent) {
                 throw new Error("query failed");
             }
+            return yield __1.appDataSource
+                .getTreeRepository(Post_1.Post)
+                .findDescendantsTree(parent);
         });
     }
     createPost(input, { req }) {
@@ -215,7 +208,7 @@ let PostResolver = class PostResolver {
             const isUpdoot = value !== -1;
             const realValue = isUpdoot ? 1 : -1;
             const { userId } = req.session;
-            const updoot = yield Updoot_1.PostUpdoot.findOne({ where: { userId, postId } });
+            const updoot = yield Updoot_1.Updoot.findOne({ where: { userId, postId } });
             if (updoot) {
                 if (updoot.value === realValue) {
                     yield __1.appDataSource.transaction((tm) => __awaiter(this, void 0, void 0, function* () {
@@ -292,10 +285,9 @@ __decorate([
     (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
     __param(0, (0, type_graphql_1.Ctx)()),
     __param(1, (0, type_graphql_1.Arg)("text", () => String)),
-    __param(2, (0, type_graphql_1.Arg)("isDirectReply", () => Boolean)),
-    __param(3, (0, type_graphql_1.Arg)("replyId", () => type_graphql_1.Int)),
+    __param(2, (0, type_graphql_1.Arg)("replyId", () => type_graphql_1.Int)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Boolean, Number]),
+    __metadata("design:paramtypes", [Object, String, Number]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "reply", null);
 __decorate([

@@ -9,11 +9,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ReplyUpdoot = exports.PostUpdoot = void 0;
+exports.Updoot = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Post_1 = require("./Post");
-const Reply_1 = require("./Reply");
 const User_1 = require("./User");
 let Updoot = class Updoot extends typeorm_1.BaseEntity {
 };
@@ -32,16 +31,11 @@ __decorate([
     (0, typeorm_1.ManyToMany)(() => User_1.User, (user) => user.updoots),
     __metadata("design:type", User_1.User)
 ], Updoot.prototype, "user", void 0);
-Updoot = __decorate([
-    (0, type_graphql_1.ObjectType)()
-], Updoot);
-let PostUpdoot = class PostUpdoot extends Updoot {
-};
 __decorate([
     (0, type_graphql_1.Field)(() => type_graphql_1.Int),
     (0, typeorm_1.PrimaryColumn)(),
     __metadata("design:type", Number)
-], PostUpdoot.prototype, "postId", void 0);
+], Updoot.prototype, "postId", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => Post_1.Post),
     (0, typeorm_1.ManyToMany)(() => Post_1.Post, (post) => post.updoots, {
@@ -49,30 +43,10 @@ __decorate([
         nullable: true,
     }),
     __metadata("design:type", Post_1.Post)
-], PostUpdoot.prototype, "post", void 0);
-PostUpdoot = __decorate([
+], Updoot.prototype, "post", void 0);
+Updoot = __decorate([
     (0, type_graphql_1.ObjectType)(),
     (0, typeorm_1.Entity)()
-], PostUpdoot);
-exports.PostUpdoot = PostUpdoot;
-let ReplyUpdoot = class ReplyUpdoot extends Updoot {
-};
-__decorate([
-    (0, type_graphql_1.Field)(() => type_graphql_1.Int),
-    (0, typeorm_1.PrimaryColumn)(),
-    __metadata("design:type", Number)
-], ReplyUpdoot.prototype, "replyId", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(() => Reply_1.Reply),
-    (0, typeorm_1.ManyToMany)(() => Reply_1.Reply, (reply) => reply.updoots, {
-        onDelete: "CASCADE",
-        nullable: true,
-    }),
-    __metadata("design:type", Post_1.Post)
-], ReplyUpdoot.prototype, "reply", void 0);
-ReplyUpdoot = __decorate([
-    (0, type_graphql_1.ObjectType)(),
-    (0, typeorm_1.Entity)()
-], ReplyUpdoot);
-exports.ReplyUpdoot = ReplyUpdoot;
+], Updoot);
+exports.Updoot = Updoot;
 //# sourceMappingURL=Updoot.js.map

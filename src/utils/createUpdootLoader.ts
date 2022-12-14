@@ -1,5 +1,5 @@
 import DataLoader from "dataloader";
-import { PostUpdoot, ReplyUpdoot } from "../entities/Updoot";
+import { Updoot } from "../entities/Updoot";
 
 // check this out for ts shit later
 
@@ -8,26 +8,21 @@ import { PostUpdoot, ReplyUpdoot } from "../entities/Updoot";
 // return [{postId: 1, userId: 10, value: 1}]
 
 interface UpdootLoaderKeys {
-  postId?: number;
-  replyId?: number;
+  postId: number;
   userId: number;
 }
 
 export const createUpdootLoader = () =>
-  new DataLoader<UpdootLoaderKeys, PostUpdoot | ReplyUpdoot | null>(
-    async (keys) => {
-      const updoots =
-        (await PostUpdoot.findByIds(keys as any)) +
-        (await ReplyUpdoot.findByIds(keys as any));
+  new DataLoader<UpdootLoaderKeys, Updoot | null>(async (keys) => {
+    const updoots = await Updoot.findByIds(keys as any);
 
-      const updootIdsToUpdoot: Record<number, Updoot> = {};
-      updoots.forEach((u) => {
-        updootIdsToUpdoot[`${u.userId}|${u.postId}` as any] = u;
-      });
-      const sortedUsers = keys.map(
-        (key) => updootIdsToUpdoot[`${key.userId}|${key.postId}` as any]
-      );
+    const updootIdsToUpdoot: Record<number, Updoot> = {};
+    updoots.forEach((u) => {
+      updootIdsToUpdoot[`${u.userId}|${u.postId}` as any] = u;
+    });
+    const sortedUsers = keys.map(
+      (key) => updootIdsToUpdoot[`${key.userId}|${key.postId}` as any]
+    );
 
-      return sortedUsers;
-    }
-  );
+    return sortedUsers;
+  });

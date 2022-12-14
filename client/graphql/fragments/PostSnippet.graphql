@@ -1,15 +1,15 @@
-fragment PostsSnippet on Post {
+fragment PostSnippet on Post {
   id
   title
   text
+  voteStatus
   points
   creatorId
   creator {
-    id
-    username
+    ...RegularUser
   }
   createdAt
   updatedAt
-  voteStatus
+  replyId
   textSnippet
 }

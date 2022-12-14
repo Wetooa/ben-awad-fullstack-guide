@@ -4,7 +4,7 @@ import Loading from "../components/Loading";
 import Layout from "../components/Layout";
 import { Box, Button, Flex, Link, Stack, Text } from "@chakra-ui/react";
 import { useState } from "react";
-import { useMeQuery, usePostsQuery } from "../generated/graphql";
+import { usePostsQuery } from "../generated/graphql";
 import UpdootSection from "../components/UpdootSection";
 import EditDeletePostButtons from "../components/EditDeletePostButtons";
 
@@ -18,7 +18,6 @@ import EditDeletePostButtons from "../components/EditDeletePostButtons";
 // no need to ssr everything. only ssr dynamic pages which need server requests while static pages such as login forms can be left with no ssr
 
 export default withUrqlClient(createUrqlClient, { ssr: true })(function Home() {
-  const [deletingPostId, setDeletingPostId] = useState(-1);
   const [variables, setVariables] = useState({
     limit: 15,
     cursor: "",

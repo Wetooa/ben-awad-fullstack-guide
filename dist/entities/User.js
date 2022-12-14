@@ -51,13 +51,9 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "password", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => Updoot_1.PostUpdoot, (updoot) => updoot.user),
+    (0, typeorm_1.OneToMany)(() => Updoot_1.Updoot, (updoot) => updoot.user),
     __metadata("design:type", Array)
 ], User.prototype, "updoots", void 0);
-__decorate([
-    (0, typeorm_1.OneToMany)(() => Updoot_1.ReplyUpdoot, (updoot) => updoot.user),
-    __metadata("design:type", Array)
-], User.prototype, "replyUpdoots", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => Post_1.Post, (post) => post.creator, { nullable: true }),
     __metadata("design:type", Array)
