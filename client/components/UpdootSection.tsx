@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { ChevronUpIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { Flex, IconButton } from "@chakra-ui/react";
-import { PostSnippetFragment, useVoteMutation } from "../generated/graphql";
+import {
+  PostQuery,
+  PostSnippetFragment,
+  useVoteMutation,
+} from "../generated/graphql";
 
 interface UpdootSectionProps {
   //   post: PostsQuery["posts"]["posts"][0]; // selecting a type inside another type, pretty cool but kinda unnecessary
